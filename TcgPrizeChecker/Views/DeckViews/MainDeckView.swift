@@ -14,16 +14,22 @@ struct MainDeckView: View {
 	@EnvironmentObject var deckSelectionViewModel: DeckSelectionViewModel
 	//@ObservedObject var cardsetViewModel = CardSetViewModel()
 	
-	
-	
-	
 	@Query var deck: [PersistentCard]
 	@State private var addPlayableCards = false
 	@State private var createDeck = false
 	@State private var viewSelection = 0
 	@State private var isShowingMessage = false
 	@State private var deleteDeck = false
-	var cardFilters = ["sv", "swsh9", "swsh10", "swsh10.5", "swsh11", "swsh12", "swsh12.5",]
+	@State private var debounceTimer: Timer?
+	@State private var showImage = false
+	var cardFilters = ["sv",
+					   //"swsh9",
+					   //"swsh10",
+					   //"swsh10.5",
+					   //"swsh11",
+					   //"swsh12",
+					   //"swsh12.5"
+	]
 	
 	
 	//Variabler som er direkte knyttet til deck-objekter:
@@ -47,6 +53,7 @@ struct MainDeckView: View {
 	@State private var searchText = ""
 	@State private var results: [Card] = []
 	@State private var searchTask: Task<Void, Never>? = nil
+	@FocusState var isInputActive: Bool
 	
 	var body: some View {
 		NavigationStack {
@@ -57,59 +64,99 @@ struct MainDeckView: View {
 						Text("Search for cards to add")
 							.foregroundStyle(.gray)
 					}
+					.focused($isInputActive)
+					.autocorrectionDisabled(true)
+					.padding(.leading, 7)
 					.padding(.vertical, 8)
 					.background {
 						RoundedRectangle(cornerRadius: 8).fill(.gray.opacity(0.2))
 						
 					}
 					.onChange(of: searchText) { oldValue, newValue in
-						handleSearch(newValue)
-					}
-				}
-				.padding(.horizontal, 15)
-				ZStack {
-					HStack {
-						if !decks.isEmpty {
-							Picker("Choose deck", selection: $deckSelectionViewModel.selectedDeckID.bound(to: decks)) {
-								ForEach(decks) { deck in
-									Text(deck.name).tag(deck.id as String?)
-								}
+						debounceTimer?.invalidate()
+						debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) {_ in
+							Task {
+								await performSearch(query: newValue)
 							}
-							.frame(maxWidth: .infinity, alignment: .center)
-						} else {
-							Text("Create a deck to get started.")
-								.frame(maxWidth: .infinity, alignment: .center)
+						}
+						//handleSearch(newValue)
+					}
+					.overlay(alignment: .trailing) {
+						if !searchText.isEmpty {
+							Button {
+								searchText = ""
+							} label: {
+								Image(systemName: "x.circle.fill")
+									.foregroundStyle(.gray)
+								
+							}
+							.padding(.trailing, 10)
 						}
 					}
-					HStack {
-						if decks.count > 0 {
-							withAnimation {
-								Button {
-									deleteDeck.toggle()
-								} label: {
-									Image(systemName: "trash.circle")
-										.opacity(searchText.isEmpty || !decks.isEmpty ? 1 : 0)
-										.foregroundStyle(.red)
+					Button("Cancel") {
+						isInputActive = false
+						searchText = ""
+					}
+					.opacity(isInputActive ? 1 : 0)
+					.animation(.easeIn(duration: 0.2), value: isInputActive)
+				}
+				.padding(.horizontal, 15)
+				
+				
+				// Hvis søketekst-feltet er tomt vises det nåværende decket. Bruker kan velge mellom list- eller gridview.
+				if searchText.isEmpty {
+					ZStack {
+						HStack {
+							Button {
+								createDeck.toggle()
+							} label: {
+								Image(systemName: "plus.circle")
+									.foregroundStyle(.green)
+									.font(.title)
+							}
+							.frame(maxWidth: .infinity, alignment: .leading)
+							.padding(.leading, 20)
+						}
+						HStack {
+							if !decks.isEmpty {
+								Picker("Choose deck", selection: $deckSelectionViewModel.selectedDeckID.bound(to: decks)) {
+									ForEach(decks) { deck in
+										Text(deck.name).tag(deck.id as String?)
+									}
 								}
-								.alert("Are you sure you want to delete the deck?", isPresented: $deleteDeck) {
-									Button("Cancel", role: .cancel) { }
-									Button("Yes", role: .destructive) {
-										if let selectedDeck = selectedDeck {
-											modelContext.delete(selectedDeck)
-											try? modelContext.save()
+								.frame(maxWidth: .infinity, alignment: .center)
+							} else {
+								Text("Create a deck to get started.")
+									.frame(maxWidth: .infinity, alignment: .center)
+							}
+						}
+						HStack {
+							if decks.count > 0 {
+								withAnimation {
+									Button {
+										deleteDeck.toggle()
+									} label: {
+										Image(systemName: "trash.circle")
+											.font(.title)
+											.opacity(searchText.isEmpty || !decks.isEmpty ? 1 : 0)
+											.foregroundStyle(.red)
+									}
+									.alert("Are you sure you want to delete the deck?", isPresented: $deleteDeck) {
+										Button("Cancel", role: .cancel) { }
+										Button("Yes", role: .destructive) {
+											if let selectedDeck = selectedDeck {
+												modelContext.delete(selectedDeck)
+												try? modelContext.save()
+											}
 										}
 									}
 								}
 							}
 						}
+						.frame(maxWidth: .infinity, alignment: .trailing)
+						.padding(.trailing, 20)
 					}
-					.frame(maxWidth: .infinity, alignment: .trailing)
-					.padding(.trailing, 20)
-				}
-				
-				
-				// Hvis søketekst-feltet er tomt vises det nåværende decket. Bruker kan velge mellom list- eller gridview.
-				if searchText.isEmpty {
+					
 					Picker(selection: $viewSelection) {
 						Text("List View").tag(0)
 						Text("Grid View").tag(1)
@@ -117,42 +164,35 @@ struct MainDeckView: View {
 						Text("Change View Type")
 					}
 					.pickerStyle(.segmented)
-						
+					
 					switch viewSelection {
 					case 0:
 						DeckListView(selectedDeckID: deckSelectionViewModel.selectedDeckID)
 					default:
 						ZStack {
-							DeckGridView(isShowingMessage: $isShowingMessage, selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "")
+							DeckGridView(isShowingMessage: $isShowingMessage,
+										 selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "")
 							MessageView(messageContent: "The selected card was deleted from the deck.")
 								.opacity(isShowingMessage ? 1 : 0)
 						}
 					}
 					
-					// En enkel count for å holde styr på antall kort i decket.
-					if let selectedDeck = selectedDeck {
-						Text("There are: \(selectedDeck.cards.count) cards in the deck.")
-						if selectedDeck.cards.count > 60 {
-							Text("There's currently too many cards in deck")
-								.foregroundStyle(.red)
-						}
-						}
 					
 					
 					HStack {
-						//Trykk for å lage deck. Sendes til et nytt view (sheet).
-						Button {
-							createDeck.toggle()
-						} label: {
-							Text("Create Deck")
+						
+						// En enkel count for å holde styr på antall kort i decket.
+						if let selectedDeck = selectedDeck {
+							Text("There are: \(selectedDeck.cards.count) cards in the deck.")
+							if selectedDeck.cards.count > 60 {
+								Text("There's currently too many cards in deck")
+									.foregroundStyle(.red)
+							}
 						}
-						.buttonStyle(.borderedProminent)
-						.padding(.horizontal)
-						// Playable cards er kommentert ut til appen har helt implementert muligheten til å ha flere deck
 						Button {
 							addPlayableCards.toggle()
 						} label: {
-							Text("Add Playable Cards")
+							Text("Playables")
 						}
 						.buttonStyle(.borderedProminent)
 						.padding(.horizontal)
@@ -163,13 +203,15 @@ struct MainDeckView: View {
 					// deckName er kun for debugging, det trengs ikke for logikken som implementerer decks.
 					let deckName = decks.first(where: {$0.id == deckSelectionViewModel.selectedDeckID})?.name ?? "No deck selected"
 					
-					FilteredCardsView(allCardsViewModel: allCardsViewModel, filteredCards: results, deckName: deckName, selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "")
+					FilteredCardsView(allCardsViewModel: allCardsViewModel,
+									  filteredCards: results,
+									  showImage: $showImage, deckName: deckName,
+									  selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "")
 					
-					.padding(.horizontal)
+						.padding(.horizontal)
 				}
 			}
-		//	.searchable(text: $searchText, prompt: "Search for cards to add")
-			.navigationTitle("Decks")
+			.navigationTitle("Deck Overview")
 			.navigationBarTitleDisplayMode(.inline)
 		}
 		// Playable cards er kommentert ut til appen har helt implementert muligheten til å ha flere deck
@@ -188,7 +230,7 @@ struct MainDeckView: View {
 			validationSelection()
 		}
 	}
-
+	
 	private func validationSelection() {
 		if deckSelectionViewModel.selectedDeckID == nil || !decks.contains(where: { $0.id == deckSelectionViewModel.selectedDeckID}) {
 			deckSelectionViewModel.selectedDeckID = decks.first?.id
@@ -205,13 +247,28 @@ struct MainDeckView: View {
 	}
 	
 	private func performSearch(query: String) async {
-		try? await Task.sleep(nanoseconds: 1_000_000_000)
+		let lowerCasedQuery = query.lowercased()
 		
-		let simulatedResults = filteredCards
-		await MainActor.run {
-			results = simulatedResults.filter { card in
+		if lowerCasedQuery.isEmpty {
+			await MainActor.run {
+				results = []
+				return
+			}
+		}
+		let simulatedResults: [Card]
+		
+		if query.count == 1 {
+			simulatedResults = filteredCards.filter { card in
+				card.name.lowercased().hasPrefix(lowerCasedQuery)
+			}
+		} else {
+			simulatedResults = filteredCards.filter { card in
 				card.name.localizedCaseInsensitiveContains(query)
 			}
+		}
+		
+		await MainActor.run {
+			results = simulatedResults
 		}
 	}
 }
@@ -314,7 +371,7 @@ extension Binding where Value == String? {
 //			deckSelectionViewModel.selectedDeckID = firstDeck.id
 //			print(firstDeck.id)
 //		}
-//	
+//
 //	if deckSelectionViewModel.selectedDeckID == nil || !decks.contains(where: { $0.id == deckSelectionViewModel.selectedDeckID}){
 //		deckSelectionViewModel.selectedDeckID = decks.first?.id
 //	}

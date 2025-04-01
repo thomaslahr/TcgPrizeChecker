@@ -8,12 +8,13 @@
 import SwiftUI
 
 enum CardSetName: String, Decodable, CaseIterable, Hashable {
-	case brilliantStars = "Brilliant Stars"
-	case astralRadiance = "Astral Radiance"
-	case pokemonG0 = "Pokémon GO"
-	case lostOrigin = "Lost Origin"
-	case silverTempest = "Silver Tempest"
-	case crownZenith = "Crown Zenith"
+//	case brilliantStars = "Brilliant Stars"
+//	case astralRadiance = "Astral Radiance"
+//	case pokemonG0 = "Pokémon GO"
+//	case lostOrigin = "Lost Origin"
+//	case silverTempest = "Silver Tempest"
+//	case crownZenith = "Crown Zenith"
+	case svBlackStarPromo = "S&V Promo"
 	case scarletAndViolet = "Scarlet & Violet"
 	case paldeaEvolved = "Paldea Evolved"
 	case obsidianFlames = "Obsidian Flames"
@@ -25,23 +26,27 @@ enum CardSetName: String, Decodable, CaseIterable, Hashable {
 	case shroudedFable = "Shrouded Fable"
 	case stellarCrown = "Stellar Crown"
 	case surgingSparks = "Surging Sparks"
+	case prismaticEvolutions = "Prismatic Evolutions"
+	case journeyTogether = "Journey Together"
 	
 	var cardSetNumber: String {
 		switch self {
 			
-		case .brilliantStars:
-			"swsh9"
-		case .astralRadiance:
-			"swsh10"
-		case .pokemonG0:
-			"swsh10.5"
-		case .lostOrigin:
-			"swsh11"
-		case .silverTempest:
-			"swsh12"
-		case .crownZenith:
-			"swsh12.5"
-			
+//These sets have rotated out, and for simplicity sakes they're not included now.
+//		case .brilliantStars:
+//			"swsh9"
+//		case .astralRadiance:
+//			"swsh10"
+//		case .pokemonG0:
+//			"swsh10.5"
+//		case .lostOrigin:
+//			"swsh11"
+//		case .silverTempest:
+//			"swsh12"
+//		case .crownZenith:
+//			"swsh12.5"
+		case .svBlackStarPromo:
+			"svp"
 		case .scarletAndViolet:
 			"sv01"
 		case .paldeaEvolved:
@@ -64,25 +69,31 @@ enum CardSetName: String, Decodable, CaseIterable, Hashable {
 			"sv07"
 		case .surgingSparks:
 			"sv08"
-		
+		case .prismaticEvolutions:
+			"sv08.5"
+		case .journeyTogether:
+			"sv09"
+	
 		}
 	}
 	
 	var cardSetShortName: String {
 		switch self {
-		case .brilliantStars:
-			"swsh9"
-		case .astralRadiance:
-			"swsh10"
-		case .pokemonG0:
-			"swsh10.5"
-		case .lostOrigin:
-			"swsh11"
-		case .silverTempest:
-			"swsh12"
-		case .crownZenith:
-			"swsh12.5"
-			
+//These sets have rotated out, and for simplicity sakes they're not included now.
+//		case .brilliantStars:
+//			"swsh9"
+//		case .astralRadiance:
+//			"swsh10"
+//		case .pokemonG0:
+//			"swsh10.5"
+//		case .lostOrigin:
+//			"swsh11"
+//		case .silverTempest:
+//			"swsh12"
+//		case .crownZenith:
+//			"swsh12.5"
+		case .svBlackStarPromo:
+			"SVP"
 		case .scarletAndViolet:
 			"SVI"
 		case .paldeaEvolved:
@@ -105,24 +116,32 @@ enum CardSetName: String, Decodable, CaseIterable, Hashable {
 			"STC"
 		case .surgingSparks:
 			"SSP"
+		case .prismaticEvolutions:
+			"PRE"
+		case .journeyTogether:
+			"JTG"
 		}
 	}
 	
 	var cardSetLogo: Image {
 		switch self {
 			
-		case .brilliantStars:
-			Image(.swsh9BrilliantStars)
-		case .astralRadiance:
-			Image(.swsh10AstralRadiance)
-		case .pokemonG0:
-			Image(.swsh105PokemonGo)
-		case .lostOrigin:
-			Image(.swsh11LostOrigin)
-		case .silverTempest:
-			Image(.swsh12SilverTempest)
-		case .crownZenith:
-			Image(.swsh125CrownZenith)
+//These sets have rotated out, and for simplicity sakes they're not included now.
+//		case .brilliantStars:
+//			Image(.swsh9BrilliantStars)
+//		case .astralRadiance:
+//			Image(.swsh10AstralRadiance)
+//		case .pokemonG0:
+//			Image(.swsh105PokemonGo)
+//		case .lostOrigin:
+//			Image(.swsh11LostOrigin)
+//		case .silverTempest:
+//			Image(.swsh12SilverTempest)
+//		case .crownZenith:
+//			Image(.swsh125CrownZenith)
+			
+		case .svBlackStarPromo:
+			Image("")
 		case .scarletAndViolet:
 			Image(.sv01ScarletAndViolet)
 		case .paldeaEvolved:
@@ -145,6 +164,10 @@ enum CardSetName: String, Decodable, CaseIterable, Hashable {
 			Image(.sv07StellarCrown)
 		case .surgingSparks:
 			Image(.sv08SurgingSparks)
+		case .prismaticEvolutions:
+			Image("")
+		case .journeyTogether:
+			Image("")
 		}
 	}
 }

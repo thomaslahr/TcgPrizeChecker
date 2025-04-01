@@ -40,6 +40,7 @@ struct PrizeCheckView: View {
 	@State private var isTimerRunning = false
 	@State private var elapsedTime: TimeInterval = 0.0
 	
+	
 	private var selectedDeck: Deck? {
 		decks.first(where: { $0.id == deckSelectionViewModel.selectedDeckID})
 	}
@@ -61,7 +62,7 @@ struct PrizeCheckView: View {
 					// Deck-picker-en øverst i viewet
 					if deckSelectionViewModel.selectedDeckID != nil {
 						DeckPickerView(decks: decks)
-						.disabled(isTimerRunning && !cardsInHand.isEmpty)
+							.disabled(isTimerRunning && !cardsInHand.isEmpty)
 					}
 					
 					//"Hoveddelen av viewet hvor de tre radene med kort er.
@@ -79,7 +80,7 @@ struct PrizeCheckView: View {
 							guessResult: $guessResult,
 							isTimerRunning: isTimerRunning
 						)
-							.padding()
+						.padding()
 					}
 					
 					if let selectedDeck = selectedDeck {
@@ -113,30 +114,31 @@ struct PrizeCheckView: View {
 				//Knappene nederst i viewet, over TabViewet.
 				HStack {
 					ZStack {
-							Button {
-								isTimerRunning = false
-							} label: {
-								Image(systemName: "x.circle")
-									.font(.title)
-									.fontWeight(.bold)
-									.tint(.red)
-									.animation(.linear(duration: 0.2), value: isTimerRunning)
-							}
-							.disabled(!isTimerRunning)
-							.padding(20)
+						Button {
+							isTimerRunning = false
+						} label: {
+							Image(systemName: "x.circle")
+								.font(.title)
+								.fontWeight(.bold)
+								.tint(.red)
+								.animation(.linear(duration: 0.2), value: isTimerRunning)
+						}
+						.disabled(!isTimerRunning)
+						.padding(20)
 						.frame(maxWidth: .infinity, alignment: .leading)
 						
 						Button {
-							if !isTimerRunning {
-								shuffleDeck()
-								resetDeck()
-								isTimerRunning = true
-								
-							} else {
+							if isTimerRunning {
+								//Submit
 								checkUserGuesses()
 								//	showPrizeCards = true
 								isTimerRunning = false
 								showResultsPopover = true
+							} else {
+								//Shuffle
+								shuffleDeck()
+								resetDeck()
+								isTimerRunning = true
 							}
 							
 						} label: {
@@ -157,13 +159,13 @@ struct PrizeCheckView: View {
 						
 						//Submit-kanppen er deaktivert hvis shuffle har blitt trykket på først. Mulig selve logikken her kan forenkles? 17.12.24
 						
-							Button {
-								showInfoView.toggle()
-							} label: {
-								Image(systemName: "info.circle")
-									.font(.title)
-							}
-							.disabled(isTimerRunning)
+						Button {
+							showInfoView.toggle()
+						} label: {
+							Image(systemName: "info.circle")
+								.font(.title)
+						}
+						.disabled(isTimerRunning)
 						.padding(20)
 						.frame(maxWidth: .infinity, alignment: .trailing)
 					}
@@ -181,8 +183,16 @@ struct PrizeCheckView: View {
 						.presentationDetents([.medium])
 				}
 				.popover(isPresented: $showResultsPopover) {
-					PopoverViewPrize(prizeCards: prizeCards, guessResult: guessResult, elapsedTime: $elapsedTime)
+					PopoverViewPrize(
+						prizeCards: prizeCards,
+						userGuesses: userGuesses,
+						guessResult: guessResult,
+						elapsedTime: $elapsedTime)
 						.interactiveDismissDisabled()
+						.onAppear() {
+							fullViewReset()
+						}
+						
 				}
 			}
 			//			.navigationTitle(isTimerRunning ? "" : "Prize Checker")
@@ -240,14 +250,14 @@ struct PrizeCheckView: View {
 			}
 		}
 		
-
+		
 	}
 	
 	private func fullViewReset() {
 		remainingCardsInDeck.removeAll()
 		cardsInHand.removeAll()
-		prizeCards.removeAll()
-		elapsedTime = 0.0
+		//prizeCards.removeAll()
+		//elapsedTime = 0.0
 		timerString = "0.00"
 	}
 }

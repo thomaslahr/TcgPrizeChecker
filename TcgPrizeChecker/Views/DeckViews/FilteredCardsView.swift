@@ -11,11 +11,12 @@ import AsyncAlgorithms
 
 struct FilteredCardsView: View {
 	@Environment(\.modelContext) private var modelContext
-	@State private var showImage = false
 	@ObservedObject var allCardsViewModel: AllCardsViewModel
 	var filteredCards: [Card]
 	@State private var isButtonDisabled = false
-	@State private var isShowingMessage = false
+	@State private var wasCardAddedToDeck = false
+	@State private var wasCardAddedAsPlayable = false
+	@Binding var showImage: Bool
 	
 	let deckName: String
 	
@@ -83,10 +84,9 @@ struct FilteredCardsView: View {
 										print("In on tap")
 										Task {
 											print("Button tapped")
-											await displayMessage()
+											await displayMessage(whichBool: $wasCardAddedToDeck)
 										}
 									})
-							
 								
 								ButtonView(
 									card: card,
@@ -98,6 +98,14 @@ struct FilteredCardsView: View {
 									deckName: "Not to Deck",
 									selectedDeckID: "Not deck"
 								)
+								.simultaneousGesture(
+									TapGesture().onEnded {
+										print("In on tap")
+										Task {
+											print("Button tapped")
+											await displayMessage(whichBool: $wasCardAddedAsPlayable)
+										}
+									})
 							}
 						}
 						Divider()
@@ -108,12 +116,16 @@ struct FilteredCardsView: View {
 					await allCardsViewModel.fetchAllCards()
 				}
 			}
+			
+			MessageView(messageContent: "Card was added to deck.")
+				.opacity(wasCardAddedToDeck ? 1 : 0)
+			
+			MessageView(messageContent: "Card was added as a playable.")
+				.opacity(wasCardAddedAsPlayable ? 1 : 0)
+			
 			if isButtonDisabled {
 				MessageView(messageContent: "There is no deck,")
-					.opacity(isShowingMessage ? 1 : 0)
-			} else {
-				MessageView(messageContent: "Card was added to deck.")
-					.opacity(isShowingMessage ? 1 : 0)
+					.opacity(wasCardAddedToDeck ? 1 : 0)
 			}
 		}
 		.onAppear {
@@ -121,19 +133,19 @@ struct FilteredCardsView: View {
 		}
 	}
 	private func updateButtonState() {
-		if decks.count == 4 {
+		if decks.count == 0 {
 			isButtonDisabled = true
 		} else {
 			isButtonDisabled = false
 		}
 	}
 	@MainActor
-	func displayMessage() async {
+	func displayMessage(whichBool: Binding<Bool>) async {
 		print("Dislaying message")
-		isShowingMessage = true
+		whichBool.wrappedValue = true
 		try? await Task.sleep(nanoseconds: 1_000_000_000)
 		withAnimation {
-			isShowingMessage = false
+			whichBool.wrappedValue = false
 		}
 	}
 }

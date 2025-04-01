@@ -12,10 +12,12 @@ struct PopoverViewPrize: View {
 	@Environment(\.dismiss) private var dismiss
 	@Environment(\.modelContext) private var modelContext
 	
+	
 	let prizeCards: [PersistentCard]
 
 	let columns = [GridItem(.flexible(), spacing: -30),GridItem(.flexible(), spacing: -30), GridItem(.flexible(), spacing: -30)]
 	
+	let userGuesses: [String]
 	var guessResult: [Answer]
 	@Binding var elapsedTime: TimeInterval
 	@State private var flipCard = false
@@ -25,7 +27,11 @@ struct PopoverViewPrize: View {
     var body: some View {
 		let minutes = Int(elapsedTime) / 60
 		let seconds = Int(elapsedTime) % 60
+		
 		VStack{
+			let correctGuesses = guessResult.filter { answer in
+				answer == .correct
+			}
 			var timeSpentDescription: String {
 				if minutes == 0 {
 					"You spent \(seconds) second\(seconds == 1 ? "" : "s") prize checking."
@@ -38,36 +44,59 @@ struct PopoverViewPrize: View {
 				.bold()
 				.multilineTextAlignment(.center)
 				.frame(maxWidth: 300)
-				.padding(.bottom, 20)
-			VStack {
-					LazyVGrid(columns: columns, spacing: 10) {
-						ForEach(prizeCards, id: \.uniqueId) { prizeCard in
-							if let uiImage = UIImage(data: prizeCard.imageData) {
-						
-								(flipCard ? Image(uiImage: uiImage) : Image("cardBackMedium"))
-									.resizable()
-									.aspectRatio(contentMode: .fill)
-									.padding(0)
-									.frame(maxWidth: 100)
-									.scaleEffect(x: flipCard ? -1 : 1, y: 1)
-									.rotation3DEffect(.degrees(flipCard ? 180 : 0), axis: (x: 0.0, y: 1.0, z: 0.0))
+				.padding()
+			
+				VStack {
+						LazyVGrid(columns: columns, spacing: 10) {
+							ForEach(prizeCards, id: \.uniqueId) { prizeCard in
+								if let uiImage = UIImage(data: prizeCard.imageData) {
+							
+									(flipCard ? Image(uiImage: uiImage) : Image("cardBackMedium"))
+										.resizable()
+										.aspectRatio(contentMode: .fill)
+										.padding(0)
+										.frame(maxWidth: 100)
+										.scaleEffect(x: flipCard ? -1 : 1, y: 1)
+										.rotation3DEffect(.degrees(flipCard ? 180 : 0), axis: (x: 0.0, y: 1.0, z: 0.0))
+								}
 							}
 						}
 					}
+				
+			ScrollView {
+					Text("You got \(correctGuesses.count) out of 6 prize cards right.")
+						.font(.title3)
+						.bold()
+						.multilineTextAlignment(.center)
+						.frame(maxWidth: 300)
+						.padding(.top, 20)
+						.opacity(showText ? 1 : 0)
+						.animation(.easeIn(duration: 1.2), value: showText)
+				
+				VStack {
+					ForEach(0..<userGuesses.count, id: \.self) { index in
+						HStack {
+							HStack {
+								Text("\(userGuesses[index])")
+								Spacer()
+							}
+							.padding(.horizontal)
+							.padding(.vertical, 10)
+							.background {
+								RoundedRectangle(cornerRadius: 12)
+									.stroke(lineWidth: 2)
+							}
+							Image(systemName: guessResult[index].sfSymbolText)
+								.font(.largeTitle)
+								.foregroundStyle(guessResult[index].sfSymbolColor)
+						}
+						
+					}
 				}
-			
-			let correctGuesses = guessResult.filter { answer in
-				answer == .correct
+				.padding(.horizontal, 20)
 			}
-				Text("You got \(correctGuesses.count) out of 6 prize cards right.")
-					.font(.title3)
-					.bold()
-					.multilineTextAlignment(.center)
-					.frame(maxWidth: 300)
-					.padding(.top, 20)
-					.opacity(showText ? 1 : 0)
-					.animation(.easeIn(duration: 1.2), value: showText)
-					
+			.labelsHidden()
+			
 			HStack {
 				Button {
 					dismiss()
@@ -122,5 +151,5 @@ struct PopoverViewPrize: View {
 }
 
 #Preview {
-	PopoverViewPrize(prizeCards: [], guessResult: [], elapsedTime: .constant(75.0))
+	PopoverViewPrize(prizeCards: [], userGuesses: [], guessResult: [], elapsedTime: .constant(75.0))
 }
