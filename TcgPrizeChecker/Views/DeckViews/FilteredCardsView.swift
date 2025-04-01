@@ -19,10 +19,10 @@ struct FilteredCardsView: View {
 	@Binding var showImage: Bool
 	
 	let deckName: String
-	
 	//Sendt inn fra MainDeckView
 	let selectedDeckID: String
 	
+	let searchText: String
 	@Query var decks: [Deck]
 	
 	var body: some View {
@@ -34,7 +34,9 @@ struct FilteredCardsView: View {
 				}
 				
 				ScrollView {
-					Text("Number of returned cards: \(filteredCards.count)")
+					if !searchText.isEmpty {
+						Text("Number of returned cards: \(filteredCards.count)")
+					}
 					ForEach(filteredCards, id: \.id) { card in
 						HStack {
 							VStack(alignment: .leading) {
@@ -117,7 +119,7 @@ struct FilteredCardsView: View {
 				}
 			}
 			
-			MessageView(messageContent: "Card was added to deck.")
+			MessageView(messageContent: "Card was added to the \(deckName) deck.")
 				.opacity(wasCardAddedToDeck ? 1 : 0)
 			
 			MessageView(messageContent: "Card was added as a playable.")

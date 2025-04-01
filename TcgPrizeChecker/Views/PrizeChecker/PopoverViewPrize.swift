@@ -19,6 +19,9 @@ struct PopoverViewPrize: View {
 	
 	let userGuesses: [String]
 	var guessResult: [Answer]
+	
+	let selectedDeckID: String
+	
 	@Binding var elapsedTime: TimeInterval
 	@State private var flipCard = false
 	@State private var showText = false
@@ -114,10 +117,16 @@ struct PopoverViewPrize: View {
 				
 				
 				Button {
-					let newResult = PrizeCheckResult(elapsedTime: elapsedTime, correctAnswer: correctGuesses.count)
 					
-					modelContext.insert(newResult)
-					try? modelContext.save()
+					if let selectedDeck = try? modelContext.fetch(FetchDescriptor<Deck>()).first(where: { $0.id == selectedDeckID}) {
+						
+						let newResult = PrizeCheckResult(elapsedTime: elapsedTime, correctAnswer: correctGuesses.count)
+						
+						selectedDeck.results.append(newResult)
+						try? modelContext.save()
+					}
+						
+					
 					print("Result was saved to SwiftData!")
 					dismiss()
 					
@@ -151,5 +160,5 @@ struct PopoverViewPrize: View {
 }
 
 #Preview {
-	PopoverViewPrize(prizeCards: [], userGuesses: [], guessResult: [], elapsedTime: .constant(75.0))
+	PopoverViewPrize(prizeCards: [], userGuesses: [], guessResult: [], selectedDeckID: "", elapsedTime: .constant(75.0))
 }

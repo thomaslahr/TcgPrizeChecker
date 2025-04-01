@@ -22,9 +22,9 @@ struct DeckPickerView: View {
 
 #Preview {
 	DeckPickerView(decks: [
-		Deck(name: "Gardevoir ex"),
-		Deck(name: "Charizard ex"),
-		Deck(name: "Lost Box")
+		Deck(name: "Gardevoir ex", results: []),
+		Deck(name: "Charizard ex", results: []),
+		Deck(name: "Lost Box", results: [])
 	])
 		.environmentObject(DeckSelectionViewModel())
 }

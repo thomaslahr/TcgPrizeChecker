@@ -61,13 +61,7 @@ struct PlayableMainView: View {
 					.tint(.primary)
 			}
 			.padding()
-			.overlay {
-				RoundedRectangle(cornerRadius: 8)
-					.stroke(lineWidth: 2)
-				RoundedRectangle(cornerRadius: 8)
-					.stroke(lineWidth: 2)
-					.scale(x: 0.94, y: 0.84)
-			}
+
 		}
 	}
 }

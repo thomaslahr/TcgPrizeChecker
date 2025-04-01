@@ -20,17 +20,22 @@ struct CreateDeckView: View {
 				.font(.title)
 				.fontDesign(.rounded)
 				.padding()
-			TextField("Enter name of new deck:", text: $userInput)
+			TextField("Enter name of your new deck", text: $userInput)
 				.focused($isTextFieldFocused)
 				.padding()
 				.background {
 					RoundedRectangle(cornerRadius: 8)
 						.stroke(lineWidth: 2)
-						.foregroundStyle(isTextFieldFocused ? .blue : .primary)
+						.foregroundStyle(isTextFieldFocused ? .blue : .primary.opacity(0.3))
 						.animation(.easeIn(duration: 0.1), value: isTextFieldFocused)
 				}
 				.autocorrectionDisabled(true)
 				.padding(.horizontal, 20)
+			
+				Text("Deck name is too long..")
+					.font(.callout)
+					.foregroundStyle(.red)
+					.opacity(userInput.count > 20 ? 1 : 0)
 			Button("Create Deck") {
 				let newDeck = Deck(name: userInput)
 				modelContext.insert(newDeck)
@@ -38,25 +43,10 @@ struct CreateDeckView: View {
 				dismiss()
 			}
 			.padding()
-			.overlay {
-				RoundedRectangle(cornerRadius: 8)
-					.stroke(lineWidth: 2)
-				RoundedRectangle(cornerRadius: 8)
-					.stroke(lineWidth: 2)
-					.scale(x: 1.08, y: 1.22)
-			}
-			.padding(20)
-			.disabled(userInput.isEmpty)
+			.buttonStyle(.borderedProminent)
+			.disabled(userInput.isEmpty || userInput.count > 20)
 		}
 		.frame(maxHeight: .infinity)
-		.overlay {
-			RoundedRectangle(cornerRadius: 8)
-				.stroke(lineWidth: 2)
-			RoundedRectangle(cornerRadius: 8)
-				.stroke(lineWidth: 2)
-				.scale(x: 0.97, y: 0.97)
-		}
-		.padding()
 		
 		
 	}

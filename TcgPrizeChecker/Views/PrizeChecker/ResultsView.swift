@@ -11,7 +11,8 @@ import SwiftData
 struct ResultsView: View {
 	
 	@Environment(\.modelContext) private var modelContext
-	@Query var results: [PrizeCheckResult]
+	
+	let deck: Deck
 	
 	@State private var showDeleteAlert = false
 	@State private var resultToDelete: PrizeCheckResult?
@@ -23,39 +24,40 @@ struct ResultsView: View {
 				.fontDesign(.rounded)
 				.padding()
 			ScrollView {
-				ForEach(results) { result in
-					let minutes = Int(result.elapsedTime) / 60
-					let seconds = Int(result.elapsedTime) % 60
-					HStack {
-						VStack(alignment: .leading) {
-							Text("Date:\(result.date.formatted(date: .numeric, time: .shortened)).")
-								HStack{
-									Text("Time spent: ")
-									Text("\(minutes) min and \(seconds) sec.")
+					ForEach(deck.results) { result in
+						let minutes = Int(result.elapsedTime) / 60
+						let seconds = Int(result.elapsedTime) % 60
+						HStack {
+							VStack(alignment: .leading) {
+								Text("Date:\(result.date.formatted(date: .numeric, time: .shortened)).")
+									HStack{
+										Text("Time spent: ")
+										Text("\(minutes) min and \(seconds) sec.")
+											.fontWeight(.black)
+											
+									}
+								HStack {
+									Text("Correct guesses: ")
+									Text("\(result.correctAnswer)")
 										.fontWeight(.black)
-										
 								}
-							HStack {
-								Text("Correct guesses: ")
-								Text("\(result.correctAnswer)")
-									.fontWeight(.black)
+								
 							}
-							
+							Spacer()
+							Button {
+								resultToDelete = result
+								showDeleteAlert = true
+							} label: {
+								Image(systemName: "trash.circle")
+									.font(.title)
+									.foregroundStyle(.red)
+							}
+							.padding(.trailing, 5)
 						}
-						Spacer()
-						Button {
-							resultToDelete = result
-							showDeleteAlert = true
-						} label: {
-							Image(systemName: "trash.circle")
-								.font(.title)
-								.foregroundStyle(.red)
-						}
-						.padding(.trailing, 5)
+						.padding()
 					}
-					.padding()
+					
 					Divider()
-				}
 			}
 			.labelsHidden()
 		}
@@ -78,6 +80,6 @@ struct ResultsView: View {
 }
 
 #Preview {
-	ResultsView()
+	ResultsView(deck: Deck(name: "Gardevoir ex"))
 }
 

@@ -90,6 +90,7 @@ struct PrizeCheckView: View {
 					}
 				}
 				//Hvis brukeren endrer deck i f.eks MainDeckView, så nullstilles dette viewet, så det ikke vises noen kort. 17.12.24
+				
 				.onChange(of: deckSelectionViewModel.selectedDeckID) { oldValue, newValue in
 					if !cardsInHand.isEmpty {
 						withAnimation {
@@ -176,7 +177,9 @@ struct PrizeCheckView: View {
 						.presentationDetents([.medium])
 				}
 				.sheet(isPresented: $showResultsView) {
-					ResultsView()
+					if let selectedDeck = selectedDeck {
+						ResultsView(deck: selectedDeck)
+					}
 				}
 				.sheet(isPresented: $showSettingsView) {
 					PrizeSettingsView(hideTimer: $hideTimer, isRightCardOnTop: $isRightCardOnTop)
@@ -187,6 +190,7 @@ struct PrizeCheckView: View {
 						prizeCards: prizeCards,
 						userGuesses: userGuesses,
 						guessResult: guessResult,
+						selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "",
 						elapsedTime: $elapsedTime)
 						.interactiveDismissDisabled()
 						.onAppear() {

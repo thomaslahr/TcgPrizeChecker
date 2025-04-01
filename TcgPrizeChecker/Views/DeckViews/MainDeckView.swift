@@ -70,6 +70,12 @@ struct MainDeckView: View {
 					.padding(.vertical, 8)
 					.background {
 						RoundedRectangle(cornerRadius: 8).fill(.gray.opacity(0.2))
+							.background {
+								RoundedRectangle(cornerRadius: 8)
+									.stroke(lineWidth: 1)
+									.foregroundStyle(isInputActive ? .blue : .clear)
+									.animation(.easeIn(duration: 0.1), value: isInputActive)
+							}
 						
 					}
 					.onChange(of: searchText) { oldValue, newValue in
@@ -104,7 +110,7 @@ struct MainDeckView: View {
 				
 				
 				// Hvis søketekst-feltet er tomt vises det nåværende decket. Bruker kan velge mellom list- eller gridview.
-				if searchText.isEmpty {
+				if !isInputActive {
 					ZStack {
 						HStack {
 							Button {
@@ -119,14 +125,19 @@ struct MainDeckView: View {
 						}
 						HStack {
 							if !decks.isEmpty {
-								Picker("Choose deck", selection: $deckSelectionViewModel.selectedDeckID.bound(to: decks)) {
-									ForEach(decks) { deck in
-										Text(deck.name).tag(deck.id as String?)
+								HStack(spacing: 0) {
+									Picker("Choose deck", selection: $deckSelectionViewModel.selectedDeckID.bound(to: decks)) {
+										ForEach(decks) { deck in
+											Text(deck.name).tag(deck.id as String?)
+										}
 									}
 								}
-								.frame(maxWidth: .infinity, alignment: .center)
+								//.frame(maxWidth: .infinity, alignment: .center)
 							} else {
-								Text("Create a deck to get started.")
+								HStack {
+									Image(systemName: "arrow.left")
+									Text("Create a deck to get started.")
+								}
 									.frame(maxWidth: .infinity, alignment: .center)
 							}
 						}
@@ -164,21 +175,6 @@ struct MainDeckView: View {
 						Text("Change View Type")
 					}
 					.pickerStyle(.segmented)
-					
-					switch viewSelection {
-					case 0:
-						DeckListView(selectedDeckID: deckSelectionViewModel.selectedDeckID)
-					default:
-						ZStack {
-							DeckGridView(isShowingMessage: $isShowingMessage,
-										 selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "")
-							MessageView(messageContent: "The selected card was deleted from the deck.")
-								.opacity(isShowingMessage ? 1 : 0)
-						}
-					}
-					
-					
-					
 					HStack {
 						
 						// En enkel count for å holde styr på antall kort i decket.
@@ -198,15 +194,28 @@ struct MainDeckView: View {
 						.padding(.horizontal)
 						.disabled(decks.isEmpty)
 					}
-					
+					switch viewSelection {
+					case 0:
+						DeckListView(selectedDeckID: deckSelectionViewModel.selectedDeckID)
+					default:
+						ZStack {
+							DeckGridView(isShowingMessage: $isShowingMessage,
+										 selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "")
+							MessageView(messageContent: "The selected card was deleted from the deck.")
+								.opacity(isShowingMessage ? 1 : 0)
+						}
+					}
+
 				} else {
 					// deckName er kun for debugging, det trengs ikke for logikken som implementerer decks.
 					let deckName = decks.first(where: {$0.id == deckSelectionViewModel.selectedDeckID})?.name ?? "No deck selected"
 					
 					FilteredCardsView(allCardsViewModel: allCardsViewModel,
 									  filteredCards: results,
-									  showImage: $showImage, deckName: deckName,
-									  selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "")
+									  showImage: $showImage,
+									  deckName: deckName,
+									  selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "",
+									  searchText: searchText)
 					
 						.padding(.horizontal)
 				}

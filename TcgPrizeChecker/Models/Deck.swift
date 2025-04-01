@@ -13,10 +13,12 @@ class Deck {
 	var name: String
 	var id = UUID().uuidString
 	@Relationship(deleteRule: .cascade) var cards: [PersistentCard] = []
+	@Relationship(deleteRule: .cascade) var results: [PrizeCheckResult] = []
 	
 	
-	init(name: String, cards: [PersistentCard] = []) {
+	init(name: String, cards: [PersistentCard] = [], results: [PrizeCheckResult] = []) {
 		self.name = name
 		self.cards = cards
+		self.results = results
 	}
 }
