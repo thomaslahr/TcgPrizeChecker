@@ -39,6 +39,8 @@ struct PrizeCheckView: View {
 	@State private var timerString = "0.00"
 	@State private var isTimerRunning = false
 	@State private var elapsedTime: TimeInterval = 0.0
+	@State private var tappedDeck = false
+	@State private var tappedHand = false
 	
 	
 	private var selectedDeck: Deck? {
@@ -47,161 +49,193 @@ struct PrizeCheckView: View {
 	
 	var body: some View {
 		NavigationStack {
-			VStack {
-				PrizeCheckerHeaderView(
-					showResultsView: $showResultsView,
-					isTimerRunning: $isTimerRunning,
-					timerString: $timerString,
-					elapsedTime: $elapsedTime,
-					showSettingsView: $showSettingsView,
-					rotationAngle: $rotationAngle,
-					hideTimer: hideTimer
-				)
-				
-				ScrollView {
-					// Deck-picker-en øverst i viewet
-					if deckSelectionViewModel.selectedDeckID != nil {
-						DeckPickerView(decks: decks)
-							.disabled(isTimerRunning && !cardsInHand.isEmpty)
-					}
-					
-					//"Hoveddelen av viewet hvor de tre radene med kort er.
-					if !cardsInHand.isEmpty {
-						VStack {
-							DeckPartView(whichCards: "Cards In Deck", cards: remainingCardsInDeck, isRightCardOnTop: isRightCardOnTop, isCardsInHand: false)
-							
-							DeckPartView(whichCards: "Cards In Hand", cards: cardsInHand, isRightCardOnTop: isRightCardOnTop, isCardsInHand: true)
+			ZStack {
+				if tappedDeck || tappedHand {
+					   Color.black.opacity(0.5) // Semi-transparent background
+						   .edgesIgnoringSafeArea(.all) // Make it cover the entire screen
+						   .transition(.opacity)
+						   .zIndex(0) // Put the overlay behind everything else
+				   }
+				VStack {
+					PrizeCheckerHeaderView(
+						showResultsView: $showResultsView,
+						isTimerRunning: $isTimerRunning,
+						timerString: $timerString,
+						elapsedTime: $elapsedTime,
+						showSettingsView: $showSettingsView,
+						rotationAngle: $rotationAngle,
+						hideTimer: hideTimer
+					)
+					ScrollView {
+						// Deck-picker-en øverst i viewet
+						if deckSelectionViewModel.selectedDeckID != nil {
+							DeckPickerView(decks: decks)
+								.disabled(isTimerRunning && !cardsInHand.isEmpty)
 						}
-						.padding(.horizontal, 50)
 						
-						//Gjett hvilke kort som er prize cards.
-						GuessPrizeCardsView(
-							userGuesses: $userGuesses,
-							guessResult: $guessResult,
-							isTimerRunning: isTimerRunning
-						)
-						.padding()
-					}
-					
-					if let selectedDeck = selectedDeck {
-						if selectedDeck.cards.count < 14 {
-							Text("There isn't enough cards in the deck yet to prize check.")
-						}
-					}
-				}
-				//Hvis brukeren endrer deck i f.eks MainDeckView, så nullstilles dette viewet, så det ikke vises noen kort. 17.12.24
-				
-				.onChange(of: deckSelectionViewModel.selectedDeckID) { oldValue, newValue in
-					if !cardsInHand.isEmpty {
-						withAnimation {
-							fullViewReset()
-						}
-						print("The Cards in the Prize Checker was removed.")
-					}
-				}
-				//Hvis bruker legger til eller sletter kort fra decket, så nullstilles også viewet. Mulig denne logikken kan slås sammen med den over?. 17.12.24
-				.onChange(of: selectedDeck?.cards.count) { oldValue, newValue in
-					if !cardsInHand.isEmpty {
-						withAnimation {
-							fullViewReset()
-							
-						}
-						print("The Prize Checker was reset.")
-					}
-				}
-				.onDisappear {
-					isTimerRunning = false
-				}
-				//Knappene nederst i viewet, over TabViewet.
-				HStack {
-					ZStack {
-						Button {
-							isTimerRunning = false
-						} label: {
-							Image(systemName: "x.circle")
-								.font(.title)
-								.fontWeight(.bold)
-								.tint(.red)
-								.animation(.linear(duration: 0.2), value: isTimerRunning)
-						}
-						.disabled(!isTimerRunning)
-						.padding(20)
-						.frame(maxWidth: .infinity, alignment: .leading)
-						
-						Button {
-							if isTimerRunning {
-								//Submit
-								checkUserGuesses()
-								//	showPrizeCards = true
-								isTimerRunning = false
-								showResultsPopover = true
-							} else {
-								//Shuffle
-								shuffleDeck()
-								resetDeck()
-								isTimerRunning = true
+						//"Hoveddelen av viewet hvor de tre radene med kort er.
+						if !cardsInHand.isEmpty {
+							LazyVStack {
+								DeckPartView(whichCards: "Cards In Deck", cards: remainingCardsInDeck, isRightCardOnTop: isRightCardOnTop, isCardsInHand: false, tappedDeck: $tappedDeck)
+									.opacity(tappedHand ? 0 : 1)
+									.scaleEffect(tappedDeck ? 2.0 : 1.0)
+									.zIndex(tappedDeck ? 1 : 0) // Bring to front when tapped
+									.onTapGesture {
+										withAnimation(.easeInOut(duration: 0.2)) {
+											tappedDeck.toggle()
+										}
+									}
+									.padding(.top, tappedDeck ? 150 : 0)
+									
+								
+									DeckPartView(whichCards: "Cards In Hand", cards: cardsInHand, isRightCardOnTop: isRightCardOnTop, isCardsInHand: true, tappedDeck: $tappedHand)
+									.opacity(tappedDeck ? 0 : 1)
+									.scaleEffect(tappedHand ? 2.0 : 1.0)
+									.zIndex(tappedHand ? 1 : 0) // Bring to front when tapped
+									.onTapGesture {
+										withAnimation(.easeInOut(duration: 0.2)) {
+											tappedHand.toggle()
+										}
+									}
+									.padding(.bottom, tappedHand ? 250 : 0)
+								
+								
+								
 							}
+							.padding(.horizontal, 10)
 							
-						} label: {
-							Text(isTimerRunning ? "Submit" : "Shuffle Deck")
-								.foregroundStyle(.primary)
-								.padding(.horizontal, 5)
-								.padding(.vertical, 10)
-								.background {
-									RoundedRectangle(cornerRadius: 8)
-										.fill(.blue)
-										.frame(width: 150)
+							//Gjett hvilke kort som er prize cards.
+							GuessPrizeCardsView(
+								userGuesses: $userGuesses,
+								guessResult: $guessResult,
+								isTimerRunning: isTimerRunning
+							)
+							.opacity(tappedDeck || tappedHand ? 0 : 1)
+							.padding()
+						}
+						
+						if let selectedDeck = selectedDeck {
+							if selectedDeck.cards.count < 14 {
+								Text("There isn't enough cards in the deck yet to prize check.")
+							}
+						}
+					}
+					.scrollDisabled(tappedDeck || tappedHand)
+					//Hvis brukeren endrer deck i f.eks MainDeckView, så nullstilles dette viewet, så det ikke vises noen kort. 17.12.24
+					
+					.onChange(of: deckSelectionViewModel.selectedDeckID) { oldValue, newValue in
+						if !cardsInHand.isEmpty {
+							withAnimation {
+								fullViewReset()
+							}
+							print("The Cards in the Prize Checker was removed.")
+						}
+					}
+					//Hvis bruker legger til eller sletter kort fra decket, så nullstilles også viewet. Mulig denne logikken kan slås sammen med den over?. 17.12.24
+					.onChange(of: selectedDeck?.cards.count) { oldValue, newValue in
+						if !cardsInHand.isEmpty {
+							withAnimation {
+								fullViewReset()
+								
+							}
+							print("The Prize Checker was reset.")
+						}
+					}
+					.onDisappear {
+						isTimerRunning = false
+					}
+					//Knappene nederst i viewet, over TabViewet.
+					VStack(spacing: 10) {
+						if selectedDeck?.cards.count ?? 0 > 60 {
+							Text("There's too many cards in the deck.")
+								.foregroundStyle(.red)
+								.font(.caption)
+								.fontWeight(.bold)
+						}
+						HStack {
+							ZStack {
+								Button {
+									isTimerRunning = false
+									fullViewReset()
+								} label: {
+									Image(systemName: "x.circle")
+										.font(.title)
+										.fontWeight(.bold)
+										.tint(.red)
+										.animation(.linear(duration: 0.2), value: isTimerRunning)
 								}
+								.disabled(!isTimerRunning)
+								.padding(.leading, 20)
+								.frame(maxWidth: .infinity, alignment: .leading)
+								
+								Button {
+									if isTimerRunning {
+										//Submit
+										checkUserGuesses()
+										//	showPrizeCards = true
+										isTimerRunning = false
+										showResultsPopover = true
+									} else {
+										//Shuffle
+										shuffleDeck()
+										resetDeck()
+										isTimerRunning = true
+									}
+									
+								} label: {
+									Text(isTimerRunning ? "Submit" : "Shuffle Deck")
+								}
+								.buttonStyle(.borderedProminent)
+								.frame(maxWidth: .infinity, alignment: .center)
+								.disabled(selectedDeck?.cards.count ?? 0 < 14 || selectedDeck?.cards.count ?? 0 > 60)
+								
+								
+								//Submit-kanppen er deaktivert hvis shuffle har blitt trykket på først. Mulig selve logikken her kan forenkles? 17.12.24
+								
+								Button {
+									showInfoView.toggle()
+								} label: {
+									Image(systemName: "info.circle")
+										.font(.title)
+								}
+								.disabled(isTimerRunning)
+								.padding(.trailing, 20)
+								.frame(maxWidth: .infinity, alignment: .trailing)
+							}
 						}
-						.buttonStyle(.plain)
-						.frame(maxWidth: .infinity, alignment: .center)
-						.disabled(selectedDeck?.cards.count ?? 0 < 14)
-						
-						
-						//Submit-kanppen er deaktivert hvis shuffle har blitt trykket på først. Mulig selve logikken her kan forenkles? 17.12.24
-						
-						Button {
-							showInfoView.toggle()
-						} label: {
-							Image(systemName: "info.circle")
-								.font(.title)
+					}
+					.frame(maxWidth: .infinity)
+					.sheet(isPresented: $showInfoView) {
+						PrizeCheckerInfoSheet()
+							.presentationDetents([.medium])
+					}
+					.sheet(isPresented: $showResultsView) {
+						if let selectedDeck = selectedDeck {
+							ResultsView(deck: selectedDeck)
 						}
-						.disabled(isTimerRunning)
-						.padding(20)
-						.frame(maxWidth: .infinity, alignment: .trailing)
 					}
-				}
-				.frame(maxWidth: .infinity)
-				.sheet(isPresented: $showInfoView) {
-					PrizeCheckerInfoSheet()
-						.presentationDetents([.medium])
-				}
-				.sheet(isPresented: $showResultsView) {
-					if let selectedDeck = selectedDeck {
-						ResultsView(deck: selectedDeck)
+					.sheet(isPresented: $showSettingsView) {
+						PrizeSettingsView(hideTimer: $hideTimer, isRightCardOnTop: $isRightCardOnTop)
+							.presentationDetents([.medium])
 					}
-				}
-				.sheet(isPresented: $showSettingsView) {
-					PrizeSettingsView(hideTimer: $hideTimer, isRightCardOnTop: $isRightCardOnTop)
-						.presentationDetents([.medium])
-				}
-				.popover(isPresented: $showResultsPopover) {
-					PopoverViewPrize(
-						prizeCards: prizeCards,
-						userGuesses: userGuesses,
-						guessResult: guessResult,
-						selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "",
-						elapsedTime: $elapsedTime)
+					.popover(isPresented: $showResultsPopover) {
+						PopoverViewPrize(
+							prizeCards: prizeCards,
+							userGuesses: userGuesses,
+							guessResult: guessResult,
+							selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "",
+							elapsedTime: $elapsedTime)
 						.interactiveDismissDisabled()
 						.onAppear() {
 							fullViewReset()
 						}
 						
+					}
 				}
+				//			.navigationTitle(isTimerRunning ? "" : "Prize Checker")
+				//			.navigationBarTitleDisplayMode(.inline)
 			}
-			//			.navigationTitle(isTimerRunning ? "" : "Prize Checker")
-			//			.navigationBarTitleDisplayMode(.inline)
-		}
+			}
 	}
 	
 	

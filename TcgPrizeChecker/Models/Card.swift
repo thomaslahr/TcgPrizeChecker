@@ -53,3 +53,24 @@ struct Card: Decodable, Hashable, Identifiable {
 		case trainerCardEffect = "effect"
 	}
 }
+
+
+extension Card {
+	static let sampleCard = Card(
+		image: "https://assets.tcgdex.net/en/sv/sv01/245",
+		id: "sv01-245",
+		localId: "245",
+		name: "Gardevoir ex",
+		regulationMark: "G",
+		cardSetCopy: nil,
+		hp: 310,
+		types: [],
+		stage: "Stage 2",
+		evolveFrom: "Kirlia",
+		retreat: 2,
+		abilities: [],
+		attacks: [],
+		trainerType: nil,
+		trainerCardEffect: nil
+	)
+}

@@ -1,5 +1,5 @@
 //
-//  CreateDeckView.swift
+//  CreateDeckSheetView.swift
 //  PokemonPrizeChecker
 //
 //  Created by Thomas Lahr on 13/12/2024.
@@ -8,11 +8,13 @@
 import SwiftUI
 import SwiftData
 
-struct CreateDeckView: View {
+struct CreateDeckSheetView: View {
 	@Environment(\.dismiss) private var dismiss
 	@Environment(\.modelContext) private var modelContext
 	@State private var userInput = ""
 	@FocusState private var isTextFieldFocused: Bool
+	
+	var onDeckCreated: (Deck) -> Void
 
 	var body: some View {
 		VStack {
@@ -36,10 +38,12 @@ struct CreateDeckView: View {
 					.font(.callout)
 					.foregroundStyle(.red)
 					.opacity(userInput.count > 20 ? 1 : 0)
+			
 			Button("Create Deck") {
 				let newDeck = Deck(name: userInput)
 				modelContext.insert(newDeck)
 				try? modelContext.save()
+				onDeckCreated(newDeck)
 				dismiss()
 			}
 			.padding()
@@ -47,12 +51,13 @@ struct CreateDeckView: View {
 			.disabled(userInput.isEmpty || userInput.count > 20)
 		}
 		.frame(maxHeight: .infinity)
+		.background(.ultraThinMaterial)
 		
 		
 	}
 }
 
 #Preview {
-	CreateDeckView()
+	CreateDeckSheetView(onDeckCreated: {_ in })
 		.frame(height: 400)
 }

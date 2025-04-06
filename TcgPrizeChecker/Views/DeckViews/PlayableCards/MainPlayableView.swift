@@ -1,5 +1,5 @@
 //
-//  PlayableMainView.swift
+//  MainPlayableView.swift
 //  PokemonPrizeChecker
 //
 //  Created by Thomas Lahr on 12/12/2024.
@@ -37,23 +37,28 @@ struct PlayableMainView: View {
 					Text("deck.")
 				}
 			}
-			.padding(.top, 20)
-			ScrollView {
-				Picker(selection: $viewSelection) {
-					Text("Energy Cards").tag(0)
-					Text("Playables").tag(1)
-				} label: {
-					Text("Add energy cards and playables")
-				}
-				.pickerStyle(.segmented)
-				
-				switch viewSelection {
-				case 0:
-					AddEnergyCardView(selectedDeck: selectedDeck)
-				default:
-					AddPlayableView(selectedDeck: selectedDeck)
-				}
+			.padding(.top, 5)
+			.font(.callout)
+				VStack {
+					Picker(selection: $viewSelection) {
+						Text("Energy Cards").tag(0)
+						Text("Playables").tag(1)
+					} label: {
+						Text("Add energy cards and playables")
+					}
+					.pickerStyle(.segmented)
+					
+					switch viewSelection {
+					case 0:
+						ScrollView {
+							AddEnergyCardView(selectedDeck: selectedDeck)
+						}
+					default:
+							AddPlayableView(selectedDeck: selectedDeck)
+					}
 			}
+		}
+		VStack {
 			Button {
 				dismiss()
 			} label: {
@@ -61,6 +66,10 @@ struct PlayableMainView: View {
 					.tint(.primary)
 			}
 			.padding()
+			.background {
+				RoundedRectangle(cornerRadius: 12)
+					.stroke(lineWidth: 2)
+			}
 
 		}
 	}

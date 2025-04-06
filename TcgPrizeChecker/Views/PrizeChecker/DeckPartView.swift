@@ -13,19 +13,19 @@ struct DeckPartView: View {
 	let isRightCardOnTop: Bool
 	let isCardsInHand: Bool
 	@State private var showDeck = false
+	@State private var spacing = -72.0
 	
 	@State private var flipCards = false
+	@Binding var tappedDeck: Bool
 	var body: some View {
-		VStack{
-			Text("\(whichCards)")
-				.bold()
-			//		Button("Flip Cards") {
-			//			withAnimation {
-			//				showCards.toggle()
-			//			}
-			//		}
+		VStack {
+				Text("\(whichCards)")
+					.bold()
+
+			.opacity(tappedDeck ? 0 : 1)
+			
 			ScrollView(.horizontal, showsIndicators: false) {
-				HStack(spacing: -72) {
+				LazyHStack(spacing: spacing) {
 					ForEach(cards.indices, id: \.self) { index in
 						VStack {
 							if isCardsInHand {
@@ -59,8 +59,6 @@ struct DeckPartView: View {
 						.shadow(radius: 5)
 						//.offset(x: CGFloat(index * 40), y: 1)
 						.zIndex(isRightCardOnTop ? 0 : Double(cards.count - index))
-						
-						
 					}
 				}
 				
@@ -77,12 +75,22 @@ struct DeckPartView: View {
 					}
 				}
 			}
-			.frame(maxHeight: .infinity)
+			
+			HStack {
+				Text("Change distance between cards")
+					.font(.caption)
+				Slider(value: $spacing,in: -72...0)
+					.onChange(of: spacing) { oldValue, newValue in
+						print("Spacing is: \(newValue)")
+					}
+			}
+			.opacity(tappedDeck ? 0 : 1)
 		}
+		
 	}
 	
 }
 
 #Preview {
-	DeckPartView(whichCards: "Cards in deck", cards: PersistentCard.sampleDeck, isRightCardOnTop: false, isCardsInHand: true)
+	DeckPartView(whichCards: "Cards in deck", cards: PersistentCard.sampleDeck, isRightCardOnTop: false, isCardsInHand: true, tappedDeck: .constant(false))
 }

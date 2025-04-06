@@ -60,9 +60,13 @@ struct AddEnergyCardView: View {
 							.padding(5)
 						}
 					}
+					
+				}
+				.overlay {
 					MessageView(messageContent: messageContent)
 						.opacity(isShowingMessage ? 1 : 0)
 				}
+				
 			}
 			.padding(.horizontal, 10)
 			.padding(.vertical, 20)

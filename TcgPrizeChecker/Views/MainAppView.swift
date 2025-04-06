@@ -8,28 +8,55 @@
 import SwiftUI
 import SwiftData
 
-struct MainAppView: View {
-	@StateObject private var deckSelectionViewModel = DeckSelectionViewModel()
-	
-    var body: some View {
-		TabView {
-			
-			Tab("Deck", systemImage: "rectangle.on.rectangle.square.fill") {
-				MainDeckView()
-					.environmentObject(deckSelectionViewModel)
-			}
-			
-			Tab("Prize Checker", systemImage: "gift.circle") {
-				PrizeCheckView()
-					.environmentObject(deckSelectionViewModel)
-			}
-
-//			Tab("Cards", systemImage: "plus") {
-//				CardSeriesView()
+//struct MainAppView: View {
+//	@StateObject private var deckSelectionViewModel = DeckSelectionViewModel()
+//	
+//    var body: some View {
+//		TabView {
+//			
+//			Tab("Deck", systemImage: "rectangle.on.rectangle.square.fill") {
+//				MainDeckView()
+//					.environmentObject(deckSelectionViewModel)
 //			}
-			
+//			
+//			Tab("Prize Checker", systemImage: "gift.circle") {
+//				PrizeCheckView()
+//					.environmentObject(deckSelectionViewModel)
+//			}
+//
+////			Tab("Cards", systemImage: "plus") {
+////				CardSeriesView()
+////			}
+//			
+//		}
+//    }
+//}
+
+struct MainAppView: View {
+	//Can be removed if not deployed for iOS17 and below
+	@EnvironmentObject var deckSelectionViewModel: DeckSelectionViewModel
+
+	var body: some View {
+		TabView {
+			MainDeckView()
+			//Can be removed if not deployed for iOS17 and below
+				.environmentObject(deckSelectionViewModel)
+				.tabItem {
+					Label("Deck", systemImage: "rectangle.on.rectangle.square.fill")
+				}
+
+			PrizeCheckView()
+				.environmentObject(deckSelectionViewModel)
+				.tabItem {
+					Label("Prize Checker", systemImage: "gift.circle")
+				}
+
+//            CardSeriesView()
+//                .tabItem {
+//                    Label("Cards", systemImage: "plus")
+//                }
 		}
-    }
+	}
 }
 
 #Preview {

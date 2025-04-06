@@ -16,25 +16,16 @@ struct MessageView: View {
 		GeometryReader{ gr in
 			ZStack {
 				RoundedRectangle(cornerRadius: 20)
-					.fill(colorScheme == .dark ? .black : .white)
+					.fill(.thinMaterial)
 					.frame(maxWidth: gr.size.width - 100, maxHeight: 80)
-					.shadow(color: .black.opacity(0.6), radius: 8, x: 5, y: 5)
-					.overlay(
-						ZStack {
-							RoundedRectangle(cornerRadius: 8)
-								.stroke(lineWidth: 2)
-							RoundedRectangle(cornerRadius: 8)
-								.stroke(lineWidth: 3)
-								.scale(x: 0.97, y: 0.9)
-						}
-						)
+					.shadow(color: .black.opacity(0.4), radius: 8, x: 5, y: 5)
 				
 				Text(messageContent)
 					.foregroundStyle(colorScheme == .dark ? .white : .black)
 					.bold()
 					.fontDesign(.rounded)
-					.multilineTextAlignment(.leading)
-					.frame(maxWidth: 200)
+					.multilineTextAlignment(.center)
+					.frame(maxWidth: 230)
 			}
 			.position(x: gr.size.width / 2, y: gr.size.height / 1.2)
 			

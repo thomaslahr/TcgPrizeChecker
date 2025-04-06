@@ -10,10 +10,16 @@ import SwiftData
 
 @main
 struct TcgPrizeCheckerApp: App {
+	
+	//Can be removed if not deployed for iOS17 and below
+	@StateObject private var deckSelectionViewModel = DeckSelectionViewModel()
+	
     var body: some Scene {
         WindowGroup {
 			MainAppView()
 				.modelContainer(for: [PersistentCard.self, PlayableCard.self, Deck.self, PrizeCheckResult.self])
+			//Can be removed if not deployed for iOS17 and below
+				.environmentObject(deckSelectionViewModel)
         }
     }
 	

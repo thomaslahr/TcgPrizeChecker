@@ -18,10 +18,10 @@ struct MainDeckView: View {
 	@State private var addPlayableCards = false
 	@State private var createDeck = false
 	@State private var viewSelection = 0
-	@State private var isShowingMessage = false
 	@State private var deleteDeck = false
 	@State private var debounceTimer: Timer?
 	@State private var showImage = false
+	@State private var showSettingsView = false
 	var cardFilters = ["sv",
 					   //"swsh9",
 					   //"swsh10",
@@ -31,7 +31,6 @@ struct MainDeckView: View {
 					   //"swsh12.5"
 	]
 	
-	
 	//Variabler som er direkte knyttet til deck-objekter:
 	//Det er denne var-en som sendes rundt i appen
 	//@State private var selectedDeckID: String?
@@ -39,7 +38,7 @@ struct MainDeckView: View {
 		decks.first(where: { $0.id == deckSelectionViewModel.selectedDeckID})
 	}
 	@Query var decks: [Deck]
-	
+	@State private var testBinding = false
 	// Denne (+ StateObject-et) kan kanskje flyttes inn med FilteredCardsView? 15.12.24
 	var filteredCards: [Card] {
 		let cards = allCardsViewModel.cards
@@ -55,6 +54,7 @@ struct MainDeckView: View {
 	@State private var searchTask: Task<Void, Never>? = nil
 	@FocusState var isInputActive: Bool
 	
+
 	var body: some View {
 		NavigationStack {
 			VStack {
@@ -99,18 +99,28 @@ struct MainDeckView: View {
 							.padding(.trailing, 10)
 						}
 					}
-					Button("Cancel") {
-						isInputActive = false
-						searchText = ""
+					if !isInputActive && searchText.isEmpty {
+						Button {
+							showSettingsView.toggle()
+						} label: {
+							Image(systemName: "gear")
+								.font(.system(size: 27))
+						}
+					} else {
+						Button("Cancel") {
+							isInputActive = false
+							searchText = ""
+						}
+						.opacity(isInputActive || !searchText.isEmpty ? 1 : 0)
+						.animation(.easeIn(duration: 0.2), value: isInputActive)
 					}
-					.opacity(isInputActive ? 1 : 0)
-					.animation(.easeIn(duration: 0.2), value: isInputActive)
+				
 				}
 				.padding(.horizontal, 15)
 				
 				
 				// Hvis søketekst-feltet er tomt vises det nåværende decket. Bruker kan velge mellom list- eller gridview.
-				if !isInputActive {
+				if !isInputActive && searchText.isEmpty {
 					ZStack {
 						HStack {
 							Button {
@@ -175,34 +185,42 @@ struct MainDeckView: View {
 						Text("Change View Type")
 					}
 					.pickerStyle(.segmented)
+					
 					HStack {
 						
 						// En enkel count for å holde styr på antall kort i decket.
 						if let selectedDeck = selectedDeck {
-							Text("There are: \(selectedDeck.cards.count) cards in the deck.")
 							if selectedDeck.cards.count > 60 {
-								Text("There's currently too many cards in deck")
+								Text("There's currently \(selectedDeck.cards.count) cards in the deck.")
+									.padding(.leading, 10)
 									.foregroundStyle(.red)
+									.font(.caption)
+									.fontWeight(.bold)
+							} else {
+								Text("There are \(selectedDeck.cards.count) cards in the deck.")
+									.font(.caption)
+									.fontWeight(.bold)
 							}
+							
+							
 						}
+						Spacer()
 						Button {
 							addPlayableCards.toggle()
 						} label: {
-							Text("Playables")
+								Label("Playables", systemImage: "tray.2")
 						}
 						.buttonStyle(.borderedProminent)
 						.padding(.horizontal)
 						.disabled(decks.isEmpty)
 					}
+					.padding(.top, 10)
 					switch viewSelection {
 					case 0:
 						DeckListView(selectedDeckID: deckSelectionViewModel.selectedDeckID)
 					default:
 						ZStack {
-							DeckGridView(isShowingMessage: $isShowingMessage,
-										 selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "")
-							MessageView(messageContent: "The selected card was deleted from the deck.")
-								.opacity(isShowingMessage ? 1 : 0)
+							DeckGridView(selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "")
 						}
 					}
 
@@ -215,11 +233,12 @@ struct MainDeckView: View {
 									  showImage: $showImage,
 									  deckName: deckName,
 									  selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "",
-									  searchText: searchText)
-					
-						.padding(.horizontal)
+									  searchText: searchText,
+									  isInputActive:  Binding<Bool>(get: { isInputActive }, set: { isInputActive = $0 }))
+
 				}
 			}
+//			To make sure the textfield doesn't lag upon user interaction whenever the app relaunches.
 			.navigationTitle("Deck Overview")
 			.navigationBarTitleDisplayMode(.inline)
 		}
@@ -229,8 +248,13 @@ struct MainDeckView: View {
 				.presentationContentInteraction(.scrolls)
 		}
 		.sheet(isPresented: $createDeck) {
-			CreateDeckView()
+			CreateDeckSheetView { newDeck in
+				deckSelectionViewModel.selectedDeckID = newDeck.id
+			}
 				.presentationDetents([.medium])
+		}
+		.sheet(isPresented: $showSettingsView) {
+			MainSettingsView()
 		}
 		.onAppear {
 			validationSelection()
