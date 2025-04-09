@@ -25,19 +25,14 @@ struct PlayableMainView: View {
 	
 	var body: some View {
 		VStack {
-			HStack(spacing: 0) {
+			HStack(spacing: 3) {
 				if deckSelectionViewModel.selectedDeckID != nil {
 					Text("Add cards to the")
-					Picker("Choose Deck", selection: $deckSelectionViewModel.selectedDeckID) {
-						ForEach(decks) { deck in
-							Text(deck.name).tag(deck.id  as String?)
-						}
-					}
-					.pickerStyle(.automatic)
+					CustomPickerMenuView(decks: decks)
 					Text("deck.")
 				}
 			}
-			.padding(.top, 5)
+			.padding(.top, 15)
 			.font(.callout)
 				VStack {
 					Picker(selection: $viewSelection) {

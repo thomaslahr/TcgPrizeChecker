@@ -36,11 +36,19 @@ struct FilteredCardsView: View {
 	
 	@State private var isShowingMessage = false
 	@State private var messageContent = ""
+	
+	
+	
 	var body: some View {
 		ZStack {
 			VStack {
 				if !searchText.isEmpty {
 					Text("Number of returned cards: \(filteredCards.count)")
+						.font(.caption)
+						.fontWeight(.bold)
+						.blur(radius: (tappedCard != nil) ? 5 : 0)
+						.padding(.top, 8)
+					
 				}
 				//Siden api kallet bruker mye data på fetching av bilder, så kan man velge hvorvidt man vil at det skal vises eller ikke.
 				Toggle(isOn: $showImage) {
@@ -122,14 +130,6 @@ struct FilteredCardsView: View {
 			isButtonDisabled = true
 		} else {
 			isButtonDisabled = false
-		}
-	}
-	private func showMessage() {
-		isShowingMessage = true
-		DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-			withAnimation {
-				isShowingMessage = false
-			}
 		}
 	}
 }

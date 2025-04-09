@@ -54,7 +54,7 @@ enum EnergyType: String, Decodable, Hashable, Identifiable, CaseIterable {
 		switch self {
 			
 		case .colorless:
-			"Double Turbo Energy"
+			"Colorless"
 		case .darkness:
 			"Darkness Energy"
 		case .fighting:
@@ -104,7 +104,6 @@ enum EnergyType: String, Decodable, Hashable, Identifiable, CaseIterable {
 	
 	var energyCardUIImage: UIImage? {
 			switch self {
-			case .colorless: return UIImage(named: "doubleTurboEnergy")
 			case .darkness: return UIImage(named: "darknessEnergy")
 			case .fighting: return UIImage(named: "fightingEnergy")
 			case .fire: return UIImage(named: "fireEnergy")
@@ -113,6 +112,7 @@ enum EnergyType: String, Decodable, Hashable, Identifiable, CaseIterable {
 			case .metal: return UIImage(named: "metalEnergy")
 			case .psychic: return UIImage(named: "psychicEnergy")
 			case .water: return UIImage(named: "waterEnergy")
+			case .colorless: return nil
 			case .dragon: return nil
 			}
 		}

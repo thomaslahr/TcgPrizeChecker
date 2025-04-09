@@ -13,8 +13,7 @@ struct PopoverViewPrize: View {
 	@Environment(\.modelContext) private var modelContext
 	
 	
-	let prizeCards: [PersistentCard]
-
+	let deckState: DeckState
 	let columns = [GridItem(.flexible(), spacing: -30),GridItem(.flexible(), spacing: -30), GridItem(.flexible(), spacing: -30)]
 	
 	let userGuesses: [String]
@@ -51,7 +50,7 @@ struct PopoverViewPrize: View {
 			
 				VStack {
 						LazyVGrid(columns: columns, spacing: 10) {
-							ForEach(prizeCards, id: \.uniqueId) { prizeCard in
+							ForEach(deckState.prizeCards, id: \.uniqueId) { prizeCard in
 								if let uiImage = UIImage(data: prizeCard.imageData) {
 							
 									(flipCard ? Image(uiImage: uiImage) : Image("cardBackMedium"))
@@ -160,5 +159,5 @@ struct PopoverViewPrize: View {
 }
 
 #Preview {
-	PopoverViewPrize(prizeCards: [], userGuesses: [], guessResult: [], selectedDeckID: "", elapsedTime: .constant(75.0))
+	PopoverViewPrize(deckState: DeckState(), userGuesses: [], guessResult: [], selectedDeckID: "", elapsedTime: .constant(75.0))
 }

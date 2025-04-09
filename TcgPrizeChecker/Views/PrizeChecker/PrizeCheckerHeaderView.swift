@@ -8,38 +8,39 @@
 import SwiftUI
 
 struct PrizeCheckerHeaderView: View {
-	@Binding var showResultsView: Bool
-	@Binding var isTimerRunning: Bool
-	@Binding var timerString: String
-	@Binding var elapsedTime: TimeInterval
-	@Binding var showSettingsView: Bool
+	@Binding var timer: TimerState
 	@Binding var rotationAngle: Int
-	
+	@Binding var activeModal: ActiveModal?
 	let hideTimer: Bool
 	
     var body: some View {
 		HStack {
 			ZStack {
 				Button {
-					showResultsView.toggle()
+					activeModal = .results
 					print("Results button was pressed.")
 				} label: {
 					Image(systemName: "list.clipboard")
 						.font(.title)
 				}
-				.disabled(isTimerRunning)
+				.disabled(timer.isRunning)
 				.padding(.leading, 20)
 				.frame(maxWidth: .infinity, alignment: .leading)
 				
 				
-				TimerView(timerString: $timerString, isTimerRunning: $isTimerRunning, elapsedTime: $elapsedTime)
+				TimerView(
+					timerString: $timer.string,
+					isTimerRunning: $timer.isRunning,
+					elapsedTime: $timer.elapsed,
+					didTimerRunFor10min: $timer.ranFor10Min
+				)
 					.opacity(hideTimer ? 0 : 1)
 					.animation(.linear(duration: 0.2), value: hideTimer)
 					.frame(maxWidth: .infinity, alignment: .center)
 				//.border(.red)
 				
 				Button {
-					showSettingsView = true
+					activeModal = .settings
 					print("Settings button was pressed")
 					withAnimation(.easeInOut(duration: 0.6)) {
 						rotationAngle += 120
@@ -50,7 +51,7 @@ struct PrizeCheckerHeaderView: View {
 						.font(.largeTitle)
 						.rotationEffect(.degrees(Double(rotationAngle)))
 				}
-				.disabled(isTimerRunning)
+				.disabled(timer.isRunning)
 				.padding(.trailing, 20)
 				.frame(maxWidth: .infinity, alignment: .trailing)
 			}

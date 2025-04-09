@@ -24,10 +24,10 @@ struct AddEnergyCardView: View {
 	@State private var messageContent = ""
 	var body: some View {
 			VStack {
-				Text("Tap on an energy card to add it to your deck:")
+				Text("Tap on an energy card to add it to your deck.")
 				ZStack {
 					LazyVGrid(columns: columns) {
-						ForEach(EnergyType.allCases.filter { $0 != .dragon }, id: \.rawValue) { energyCard in
+						ForEach(EnergyType.allCases.filter { $0.energyCardUIImage != nil }, id: \.rawValue) { energyCard in
 							Button {
 								if let image = energyCard.energyCardUIImage,
 								   let imageData = image.pngData() {
@@ -60,12 +60,13 @@ struct AddEnergyCardView: View {
 							.padding(5)
 						}
 					}
+					.overlay {
+						MessageView(messageContent: messageContent)
+							.opacity(isShowingMessage ? 1 : 0)
+					}
 					
 				}
-				.overlay {
-					MessageView(messageContent: messageContent)
-						.opacity(isShowingMessage ? 1 : 0)
-				}
+				
 				
 			}
 			.padding(.horizontal, 10)

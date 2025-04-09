@@ -22,3 +22,7 @@ class Deck {
 		self.results = results
 	}
 }
+
+extension Deck {
+	static let sampleDeck = Deck(name: "Gardevoir ex")
+}

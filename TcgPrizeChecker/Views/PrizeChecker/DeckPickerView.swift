@@ -10,6 +10,7 @@ import SwiftUI
 struct DeckPickerView: View {
 	
 	@EnvironmentObject var deckSelectionViewModel: DeckSelectionViewModel
+	
 	let decks: [Deck]
     var body: some View {
 		Picker("Choose Deck", selection: $deckSelectionViewModel.selectedDeckID) {

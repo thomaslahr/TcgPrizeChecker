@@ -5,7 +5,9 @@
 //  Created by Thomas Lahr on 05/04/2025.
 //
 
+import SwiftData
 import SwiftUI
+
 
 struct FilteredCardRowView: View {
 	let card: Card
@@ -21,6 +23,12 @@ struct FilteredCardRowView: View {
 	@Binding var isShowingMessage: Bool
 	@Binding var tappedCard: Card?
 	let isInputActive: Binding<Bool>
+	
+	@Query var decks: [Deck]
+	
+	var deck: [PersistentCard] {
+		decks.first(where: { $0.id == selectedDeckID })?.cards ?? []
+	}
 	
     var body: some View {
 		HStack {
@@ -56,11 +64,10 @@ struct FilteredCardRowView: View {
 				currentCard: $currentCard,
 				selectedDeckID: selectedDeckID,
 				isShowingMessage: $isShowingMessage,
-				wasCardAddedToDeck: $wasCardAddedToDeck,
-				wasCardAddedAsPlayable: $wasCardAddedAsPlayable,
 				deckName: deckName,
 				messageContent: $messageContent,
-				isHorizontal: false
+				isHorizontal: false,
+				cardsInDeck: deck
 			)
 
 		}
@@ -75,6 +82,3 @@ struct FilteredCardRowView: View {
 	}
 }
 
-//#Preview {
-//	FilteredCardRowView(card: <#Card#>, showImage: <#Bool#>, allCardsViewModel: <#AllCardsViewModel#>, deckName: <#String#>, selectedDeckID: <#String#>, isButtonDisabled: <#Binding<Bool>#>, currentCard: <#Binding<Card?>#>, isMessageShowing: <#Binding<Bool>#>, wasCardAddedToDeck: <#Binding<Bool>#>, wasCardAddedAsPlayable: <#Binding<Bool>#>, messageContent: <#Binding<String>#>, tappedCard: <#Binding<Card>#>, isInputActive: <#Binding<Bool>#>)
-//}

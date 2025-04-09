@@ -13,31 +13,38 @@ struct CreateDeckSheetView: View {
 	@Environment(\.modelContext) private var modelContext
 	@State private var userInput = ""
 	@FocusState private var isTextFieldFocused: Bool
-	
+	@State private var textFieldBorderColor: Color = .blue
 	var onDeckCreated: (Deck) -> Void
 
 	var body: some View {
 		VStack {
+			let numberOfLetters = userInput.count
 			Text("Create a new deck")
 				.font(.title)
 				.fontDesign(.rounded)
 				.padding()
-			TextField("Enter name of your new deck", text: $userInput)
+			
+			TextField("Enter name of your new deck", text: $userInput.max(25))
 				.focused($isTextFieldFocused)
+				.overlay(alignment: .trailing) {
+					Text("\(numberOfLetters)/15")
+						.fontWeight(numberOfLetters > 15 ? .bold : .regular)
+						.foregroundStyle(numberOfLetters > 15 ? .red : .primary.opacity(0.3))
+						.padding()
+				}
 				.padding()
 				.background {
 					RoundedRectangle(cornerRadius: 8)
 						.stroke(lineWidth: 2)
-						.foregroundStyle(isTextFieldFocused ? .blue : .primary.opacity(0.3))
+						.foregroundStyle(isTextFieldFocused ? textFieldBorderColor : .primary.opacity(0.3))
 						.animation(.easeIn(duration: 0.1), value: isTextFieldFocused)
 				}
 				.autocorrectionDisabled(true)
 				.padding(.horizontal, 20)
-			
-				Text("Deck name is too long..")
-					.font(.callout)
-					.foregroundStyle(.red)
-					.opacity(userInput.count > 20 ? 1 : 0)
+				
+			WarningTextView(text: "Deck name is too long..", changeColor: true)
+					.opacity(userInput.count > 15 ? 1 : 0)
+					.padding(.top, 10)
 			
 			Button("Create Deck") {
 				let newDeck = Deck(name: userInput)
@@ -48,11 +55,16 @@ struct CreateDeckSheetView: View {
 			}
 			.padding()
 			.buttonStyle(.borderedProminent)
-			.disabled(userInput.isEmpty || userInput.count > 20)
+			.disabled(userInput.isEmpty || userInput.count > 15)
+		}
+		.onChange(of: userInput) {
+			let newColor: Color = userInput.count > 15 ? .red : .blue
+			if newColor != textFieldBorderColor {
+				textFieldBorderColor = newColor
+			}
 		}
 		.frame(maxHeight: .infinity)
 		.background(.ultraThinMaterial)
-		
 		
 	}
 }
@@ -60,4 +72,15 @@ struct CreateDeckSheetView: View {
 #Preview {
 	CreateDeckSheetView(onDeckCreated: {_ in })
 		.frame(height: 400)
+}
+
+extension Binding where Value == String {
+	func max(_ limit: Int) -> Self {
+		if self.wrappedValue.count > limit {
+			DispatchQueue.main.async {
+				self.wrappedValue = String(self.wrappedValue.dropLast())
+			}
+		}
+		return self
+	}
 }

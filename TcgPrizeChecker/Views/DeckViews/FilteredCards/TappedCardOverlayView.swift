@@ -5,10 +5,12 @@
 //  Created by Thomas Lahr on 06/04/2025.
 //
 
+import SwiftData
 import SwiftUI
 
 struct TappedCardOverlayView: View {
 	
+	@Environment(\.colorScheme) private var colorScheme
 	let card: Card
 	let selectedDeckID: String
 	let deckName: String
@@ -23,6 +25,12 @@ struct TappedCardOverlayView: View {
 	@Binding var cardOffset: CGFloat
 	@Binding var isDragging: Bool
 	let searchText: String
+	
+	@Query var decks: [Deck]
+	
+	var deck: [PersistentCard] {
+		decks.first(where: { $0.id == selectedDeckID })?.cards ?? []
+	}
 	var body: some View {
 		GeometryReader { geometry in
 			VStack {
@@ -72,17 +80,16 @@ struct TappedCardOverlayView: View {
 					currentCard: $currentCard,
 					selectedDeckID: selectedDeckID,
 					isShowingMessage: $isShowingMessage,
-					wasCardAddedToDeck: $wasCardAddedToDeck,
-					wasCardAddedAsPlayable: $wasCardAddedAsPlayable,
 					deckName: deckName,
 					messageContent: $messageContent,
-					isHorizontal: true)
+					isHorizontal: true,
+					cardsInDeck: deck)
 				.scaleEffect(1.5)
 				.padding(.top, 10)
 			}
 			.position(x: geometry.size.width / 2, y: geometry.size.height / 2.2)
 			.frame(maxWidth: .infinity, maxHeight: .infinity)
-			.background(.black.opacity(0.7)).ignoresSafeArea()
+			.background(colorScheme == .dark ? .black.opacity(0.7) : .white.opacity(0.7)).ignoresSafeArea()
 			.onChange(of: searchText) {
 				tappedCard = nil
 			}

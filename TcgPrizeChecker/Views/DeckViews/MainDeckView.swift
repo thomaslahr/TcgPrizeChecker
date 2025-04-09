@@ -22,14 +22,8 @@ struct MainDeckView: View {
 	@State private var debounceTimer: Timer?
 	@State private var showImage = false
 	@State private var showSettingsView = false
-	var cardFilters = ["sv",
-					   //"swsh9",
-					   //"swsh10",
-					   //"swsh10.5",
-					   //"swsh11",
-					   //"swsh12",
-					   //"swsh12.5"
-	]
+	@State private var rotationAngle = 0
+	var cardFilters = ["sv"]
 	
 	//Variabler som er direkte knyttet til deck-objekter:
 	//Det er denne var-en som sendes rundt i appen
@@ -53,6 +47,7 @@ struct MainDeckView: View {
 	@State private var results: [Card] = []
 	@State private var searchTask: Task<Void, Never>? = nil
 	@FocusState var isInputActive: Bool
+	@State private var isShowingMessage = false
 	
 
 	var body: some View {
@@ -60,6 +55,7 @@ struct MainDeckView: View {
 			VStack {
 				HStack{
 					Image(systemName: "magnifyingglass")
+						.padding(.leading, 5)
 					TextField(text: $searchText) {
 						Text("Search for cards to add")
 							.foregroundStyle(.gray)
@@ -101,10 +97,14 @@ struct MainDeckView: View {
 					}
 					if !isInputActive && searchText.isEmpty {
 						Button {
-							showSettingsView.toggle()
+							withAnimation(.easeInOut(duration: 0.6)) {
+								rotationAngle += 120
+								showSettingsView.toggle()
+							}
 						} label: {
 							Image(systemName: "gear")
 								.font(.system(size: 27))
+								.rotationEffect(.degrees(Double(rotationAngle)))
 						}
 					} else {
 						Button("Cancel") {
@@ -114,107 +114,21 @@ struct MainDeckView: View {
 						.opacity(isInputActive || !searchText.isEmpty ? 1 : 0)
 						.animation(.easeIn(duration: 0.2), value: isInputActive)
 					}
-				
 				}
 				.padding(.horizontal, 15)
 				
-				
 				// Hvis søketekst-feltet er tomt vises det nåværende decket. Bruker kan velge mellom list- eller gridview.
 				if !isInputActive && searchText.isEmpty {
-					ZStack {
-						HStack {
-							Button {
-								createDeck.toggle()
-							} label: {
-								Image(systemName: "plus.circle")
-									.foregroundStyle(.green)
-									.font(.title)
-							}
-							.frame(maxWidth: .infinity, alignment: .leading)
-							.padding(.leading, 20)
-						}
-						HStack {
-							if !decks.isEmpty {
-								HStack(spacing: 0) {
-									Picker("Choose deck", selection: $deckSelectionViewModel.selectedDeckID.bound(to: decks)) {
-										ForEach(decks) { deck in
-											Text(deck.name).tag(deck.id as String?)
-										}
-									}
-								}
-								//.frame(maxWidth: .infinity, alignment: .center)
-							} else {
-								HStack {
-									Image(systemName: "arrow.left")
-									Text("Create a deck to get started.")
-								}
-									.frame(maxWidth: .infinity, alignment: .center)
-							}
-						}
-						HStack {
-							if decks.count > 0 {
-								withAnimation {
-									Button {
-										deleteDeck.toggle()
-									} label: {
-										Image(systemName: "trash.circle")
-											.font(.title)
-											.opacity(searchText.isEmpty || !decks.isEmpty ? 1 : 0)
-											.foregroundStyle(.red)
-									}
-									.alert("Are you sure you want to delete the deck?", isPresented: $deleteDeck) {
-										Button("Cancel", role: .cancel) { }
-										Button("Yes", role: .destructive) {
-											if let selectedDeck = selectedDeck {
-												modelContext.delete(selectedDeck)
-												try? modelContext.save()
-											}
-										}
-									}
-								}
-							}
-						}
-						.frame(maxWidth: .infinity, alignment: .trailing)
-						.padding(.trailing, 20)
-					}
+					DeckActionsView(
+						decks: decks,
+						selectedDeck: selectedDeck,
+						createDeck: $createDeck,
+						isShowingMessage: $isShowingMessage,
+						deleteDeck: $deleteDeck
+					)
 					
-					Picker(selection: $viewSelection) {
-						Text("List View").tag(0)
-						Text("Grid View").tag(1)
-					} label: {
-						Text("Change View Type")
-					}
-					.pickerStyle(.segmented)
+					DeckInfoView(viewSelection: $viewSelection, addPlayableCards: $addPlayableCards, decks: decks, selectedDeck: selectedDeck)
 					
-					HStack {
-						
-						// En enkel count for å holde styr på antall kort i decket.
-						if let selectedDeck = selectedDeck {
-							if selectedDeck.cards.count > 60 {
-								Text("There's currently \(selectedDeck.cards.count) cards in the deck.")
-									.padding(.leading, 10)
-									.foregroundStyle(.red)
-									.font(.caption)
-									.fontWeight(.bold)
-							} else {
-								Text("There are \(selectedDeck.cards.count) cards in the deck.")
-									.font(.caption)
-									.fontWeight(.bold)
-							}
-							
-							
-						}
-						Spacer()
-						Button {
-							addPlayableCards.toggle()
-						} label: {
-								Label("Playables", systemImage: "tray.2")
-						}
-						.buttonStyle(.borderedProminent)
-						.padding(.horizontal)
-						.disabled(decks.isEmpty)
-					}
-					.padding(.top, 10)
 					switch viewSelection {
 					case 0:
 						DeckListView(selectedDeckID: deckSelectionViewModel.selectedDeckID)
@@ -223,7 +137,6 @@ struct MainDeckView: View {
 							DeckGridView(selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "")
 						}
 					}
-
 				} else {
 					// deckName er kun for debugging, det trengs ikke for logikken som implementerer decks.
 					let deckName = decks.first(where: {$0.id == deckSelectionViewModel.selectedDeckID})?.name ?? "No deck selected"
@@ -235,8 +148,11 @@ struct MainDeckView: View {
 									  selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "",
 									  searchText: searchText,
 									  isInputActive:  Binding<Bool>(get: { isInputActive }, set: { isInputActive = $0 }))
-
 				}
+			}
+			.overlay {
+					MessageView(messageContent: "You can only have 10 decks.")
+						.opacity(isShowingMessage ? 1 : 0)
 			}
 //			To make sure the textfield doesn't lag upon user interaction whenever the app relaunches.
 			.navigationTitle("Deck Overview")
@@ -255,6 +171,7 @@ struct MainDeckView: View {
 		}
 		.sheet(isPresented: $showSettingsView) {
 			MainSettingsView()
+				.presentationDetents([.medium])
 		}
 		.onAppear {
 			validationSelection()
@@ -326,86 +243,3 @@ extension Binding where Value == String? {
 	MainDeckView()
 		.environmentObject(DeckSelectionViewModel())
 }
-
-
-
-//Koden fra FilteredCardsViewet FØR refactoring. Kan slettes etterhvert. 15.12.24:
-
-//					VStack {
-//						Toggle(isOn: $showImage) {
-//							Text("Show Image")
-//						}
-//
-//						ScrollView {
-//							Text("Number of returned cards: \(filteredCards.count)")
-//							ForEach(filteredCards, id: \.id) { card in
-//								HStack {
-//									VStack(alignment: .leading) {
-//										HStack {
-//											Text(card.name)
-//										}
-//
-//										if let cardSetName = CardSetName.fromCardSetID(card.id) {
-//											Text("(\(cardSetName.rawValue))")
-//										} else {
-//											Text("")
-//										}
-//									}
-//									Spacer()
-//									if showImage {
-//										AsyncImage(url: URL(string: "\(card.image ?? "")/low.webp")) { image in
-//											image
-//												.resizable()
-//												.aspectRatio(contentMode: .fit)
-//												.frame(maxWidth: 60)
-//												.shadow(color: .black, radius: 3)
-//										} placeholder: {
-//											Image("cardBackMedium")
-//												.resizable()
-//												.aspectRatio(contentMode: .fit)
-//												.frame(maxWidth: 60)
-//										}
-//									}
-//
-//									VStack {
-//										ButtonView(
-//											modelContext: modelContext,
-//											card: card,
-//											cardSetViewModel: cardsetViewModel,
-//											buttonImage: "plus",
-//											foregroundColor: .blue,
-//											labelText: "Add Card To Deck",
-//											cardToSave: "Deck"
-//										)
-//
-//										ButtonView(
-//											modelContext: modelContext,
-//											card: card,
-//											cardSetViewModel: cardsetViewModel,
-//											buttonImage: "heart.fill",
-//											foregroundColor: .red,
-//											labelText: "Add Card To Playables",
-//											cardToSave: "Playable"
-//										)
-//									}
-//								}
-//								Divider()
-//							}
-//						}
-//						.task {
-//							print("API call was made for all cards.")
-//							await cardsetViewModel.fetchAllCards()
-//						}
-//					}
-
-//Sørger for at default state-en til er et valgt deck.
-//private func initializeSelection() {
-//		if deckSelectionViewModel.selectedDeckID == nil, let firstDeck = decks.first {
-//			deckSelectionViewModel.selectedDeckID = firstDeck.id
-//			print(firstDeck.id)
-//		}
-//
-//	if deckSelectionViewModel.selectedDeckID == nil || !decks.contains(where: { $0.id == deckSelectionViewModel.selectedDeckID}){
-//		deckSelectionViewModel.selectedDeckID = decks.first?.id
-//	}
-//}
