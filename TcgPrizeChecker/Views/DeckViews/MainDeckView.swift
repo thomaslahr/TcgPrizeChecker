@@ -12,51 +12,28 @@ import AsyncAlgorithms
 struct MainDeckView: View {
 	@Environment(\.modelContext) var modelContext
 	@EnvironmentObject var deckSelectionViewModel: DeckSelectionViewModel
-	//@ObservedObject var cardsetViewModel = CardSetViewModel()
+	@StateObject var searchViewModel = SearchViewModel()
+	@StateObject var allCardsViewModel = AllCardsViewModel()
 	
 	@Query var deck: [PersistentCard]
-	@State private var addPlayableCards = false
-	@State private var createDeck = false
-	@State private var viewSelection = 0
-	@State private var deleteDeck = false
-	@State private var debounceTimer: Timer?
-	@State private var showImage = false
-	@State private var showSettingsView = false
-	@State private var rotationAngle = 0
-	var cardFilters = ["sv"]
+	@Query var decks: [Deck]
 	
-	//Variabler som er direkte knyttet til deck-objekter:
-	//Det er denne var-en som sendes rundt i appen
-	//@State private var selectedDeckID: String?
+	@State private var uiState = UIState()
+	@State private var testBinding = false
+	
+	@FocusState var isInputActive: Bool
+	
 	private var selectedDeck: Deck? {
 		decks.first(where: { $0.id == deckSelectionViewModel.selectedDeckID})
 	}
-	@Query var decks: [Deck]
-	@State private var testBinding = false
-	// Denne (+ StateObject-et) kan kanskje flyttes inn med FilteredCardsView? 15.12.24
-	var filteredCards: [Card] {
-		let cards = allCardsViewModel.cards
-		return cards.filter { card in
-			cardFilters.contains(where: card.id.contains) &&
-			(searchText.isEmpty || card.name.localizedStandardContains(searchText))
-		}
-	}
 	
-	@StateObject var allCardsViewModel = AllCardsViewModel()
-	@State private var searchText = ""
-	@State private var results: [Card] = []
-	@State private var searchTask: Task<Void, Never>? = nil
-	@FocusState var isInputActive: Bool
-	@State private var isShowingMessage = false
-	
-
 	var body: some View {
 		NavigationStack {
 			VStack {
 				HStack{
 					Image(systemName: "magnifyingglass")
 						.padding(.leading, 5)
-					TextField(text: $searchText) {
+					TextField(text: $searchViewModel.searchText) {
 						Text("Search for cards to add")
 							.foregroundStyle(.gray)
 					}
@@ -74,19 +51,14 @@ struct MainDeckView: View {
 							}
 						
 					}
-					.onChange(of: searchText) { oldValue, newValue in
-						debounceTimer?.invalidate()
-						debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) {_ in
-							Task {
-								await performSearch(query: newValue)
-							}
-						}
+					.onChange(of: searchViewModel.searchText) { oldValue, newValue in
+						debounceSearch(newValue)
 						//handleSearch(newValue)
 					}
 					.overlay(alignment: .trailing) {
-						if !searchText.isEmpty {
+						if !searchViewModel.searchText.isEmpty {
 							Button {
-								searchText = ""
+								searchViewModel.searchText = ""
 							} label: {
 								Image(systemName: "x.circle.fill")
 									.foregroundStyle(.gray)
@@ -95,41 +67,41 @@ struct MainDeckView: View {
 							.padding(.trailing, 10)
 						}
 					}
-					if !isInputActive && searchText.isEmpty {
+					if !isInputActive && searchViewModel.searchText.isEmpty {
 						Button {
 							withAnimation(.easeInOut(duration: 0.6)) {
-								rotationAngle += 120
-								showSettingsView.toggle()
+								uiState.rotationAngle += 120
+								uiState.showSettingsView.toggle()
 							}
 						} label: {
 							Image(systemName: "gear")
 								.font(.system(size: 27))
-								.rotationEffect(.degrees(Double(rotationAngle)))
+								.rotationEffect(.degrees(Double(uiState.rotationAngle)))
 						}
 					} else {
 						Button("Cancel") {
 							isInputActive = false
-							searchText = ""
+							searchViewModel.searchText = ""
 						}
-						.opacity(isInputActive || !searchText.isEmpty ? 1 : 0)
+						.opacity(isInputActive || !searchViewModel.searchText.isEmpty ? 1 : 0)
 						.animation(.easeIn(duration: 0.2), value: isInputActive)
 					}
 				}
 				.padding(.horizontal, 15)
 				
 				// Hvis søketekst-feltet er tomt vises det nåværende decket. Bruker kan velge mellom list- eller gridview.
-				if !isInputActive && searchText.isEmpty {
+				if !isInputActive && searchViewModel.searchText.isEmpty {
 					DeckActionsView(
 						decks: decks,
 						selectedDeck: selectedDeck,
-						createDeck: $createDeck,
-						isShowingMessage: $isShowingMessage,
-						deleteDeck: $deleteDeck
+						createDeck: $uiState.createDeck,
+						isShowingMessage: $uiState.isShowingMessage,
+						deleteDeck: $uiState.deleteDeck
 					)
 					
-					DeckInfoView(viewSelection: $viewSelection, addPlayableCards: $addPlayableCards, decks: decks, selectedDeck: selectedDeck)
+					DeckInfoView(viewSelection: $uiState.viewSelection, addPlayableCards: $uiState.addPlayableCards, decks: decks, selectedDeck: selectedDeck)
 					
-					switch viewSelection {
+					switch uiState.viewSelection {
 					case 0:
 						DeckListView(selectedDeckID: deckSelectionViewModel.selectedDeckID)
 					default:
@@ -142,34 +114,34 @@ struct MainDeckView: View {
 					let deckName = decks.first(where: {$0.id == deckSelectionViewModel.selectedDeckID})?.name ?? "No deck selected"
 					
 					FilteredCardsView(allCardsViewModel: allCardsViewModel,
-									  filteredCards: results,
-									  showImage: $showImage,
+									  filteredCards: searchViewModel.results,
+									  showImage: $uiState.showImage,
 									  deckName: deckName,
 									  selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "",
-									  searchText: searchText,
+									  searchText: searchViewModel.searchText,
 									  isInputActive:  Binding<Bool>(get: { isInputActive }, set: { isInputActive = $0 }))
 				}
 			}
 			.overlay {
 					MessageView(messageContent: "You can only have 10 decks.")
-						.opacity(isShowingMessage ? 1 : 0)
+					.opacity(uiState.isShowingMessage ? 1 : 0)
 			}
 //			To make sure the textfield doesn't lag upon user interaction whenever the app relaunches.
 			.navigationTitle("Deck Overview")
 			.navigationBarTitleDisplayMode(.inline)
 		}
 		// Playable cards er kommentert ut til appen har helt implementert muligheten til å ha flere deck
-		.sheet(isPresented: $addPlayableCards) {
+		.sheet(isPresented: $uiState.addPlayableCards) {
 			PlayableMainView(selectedDeck: selectedDeck)
 				.presentationContentInteraction(.scrolls)
 		}
-		.sheet(isPresented: $createDeck) {
+		.sheet(isPresented: $uiState.createDeck) {
 			CreateDeckSheetView { newDeck in
 				deckSelectionViewModel.selectedDeckID = newDeck.id
 			}
 				.presentationDetents([.medium])
 		}
-		.sheet(isPresented: $showSettingsView) {
+		.sheet(isPresented: $uiState.showSettingsView) {
 			MainSettingsView()
 				.presentationDetents([.medium])
 		}
@@ -181,44 +153,17 @@ struct MainDeckView: View {
 		}
 	}
 	
+	private func debounceSearch(_ query: String) {
+		uiState.debounceTimer?.invalidate()
+		uiState.debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) {_ in
+			Task {
+				await searchViewModel.performSearch(query: query, allCards: allCardsViewModel.cards)
+			}
+		}
+	}
 	private func validationSelection() {
 		if deckSelectionViewModel.selectedDeckID == nil || !decks.contains(where: { $0.id == deckSelectionViewModel.selectedDeckID}) {
 			deckSelectionViewModel.selectedDeckID = decks.first?.id
-		}
-	}
-	
-	private func handleSearch(_ query: String) {
-		searchTask?.cancel()
-		searchTask = Task {
-			for await _ in [query].async.debounce(for: .milliseconds(300)) {
-				await performSearch(query: query)
-			}
-		}
-	}
-	
-	private func performSearch(query: String) async {
-		let lowerCasedQuery = query.lowercased()
-		
-		if lowerCasedQuery.isEmpty {
-			await MainActor.run {
-				results = []
-				return
-			}
-		}
-		let simulatedResults: [Card]
-		
-		if query.count == 1 {
-			simulatedResults = filteredCards.filter { card in
-				card.name.lowercased().hasPrefix(lowerCasedQuery)
-			}
-		} else {
-			simulatedResults = filteredCards.filter { card in
-				card.name.localizedCaseInsensitiveContains(query)
-			}
-		}
-		
-		await MainActor.run {
-			results = simulatedResults
 		}
 	}
 }
@@ -242,4 +187,17 @@ extension Binding where Value == String? {
 #Preview {
 	MainDeckView()
 		.environmentObject(DeckSelectionViewModel())
+}
+
+
+private struct UIState {
+	var viewSelection = 0
+	var debounceTimer: Timer?
+	var rotationAngle = 0
+	var addPlayableCards = false
+	var createDeck = false
+	var deleteDeck = false
+	var showImage = false
+	var showSettingsView = false
+	var isShowingMessage = false
 }

@@ -37,10 +37,13 @@ struct FilteredCardsView: View {
 	@State private var isShowingMessage = false
 	@State private var messageContent = ""
 	
+	@State private var detailedCard: Card?
+	
 	
 	
 	var body: some View {
 		ZStack {
+			
 			VStack {
 				if !searchText.isEmpty {
 					Text("Number of returned cards: \(filteredCards.count)")
@@ -123,6 +126,7 @@ struct FilteredCardsView: View {
 		.onAppear {
 			updateButtonState()
 		}
+
 	}
 	
 	private func updateButtonState() {

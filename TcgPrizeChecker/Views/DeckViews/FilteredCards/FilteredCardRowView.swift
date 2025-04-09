@@ -33,7 +33,12 @@ struct FilteredCardRowView: View {
     var body: some View {
 		HStack {
 			VStack(alignment: .leading) {
-					Text(card.name)
+				HStack{
+						Text(card.name)
+					Text("(\(card.localId))")
+					}
+				Text(card.rarity ?? "HALLo")
+				
 				
 				//For å se hvilket set kortet tilhører.
 				if let cardSetName = CardSetName.fromCardSetID(card.id) {

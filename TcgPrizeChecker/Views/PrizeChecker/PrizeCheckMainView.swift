@@ -39,7 +39,7 @@ struct PrizeCheckView: View {
 	@State private var deckSpacing: CGFloat = -72.0
 	@State private var handSpacing: CGFloat = -72.0
 	
-	@State private var activeModal: ActiveModal?
+	@State private var activeModal: PrizeModal?
 	
 	private var selectedDeck: Deck? {
 		decks.first(where: { $0.id == deckSelectionViewModel.selectedDeckID})
@@ -323,7 +323,7 @@ struct PrizeCheckView: View {
 //			}
 //		}
 
-enum ActiveModal: Identifiable {
+enum PrizeModal: Identifiable {
 	case info
 	case settings
 	case results

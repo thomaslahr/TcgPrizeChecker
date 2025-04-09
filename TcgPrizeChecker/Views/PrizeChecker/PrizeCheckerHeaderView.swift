@@ -10,7 +10,7 @@ import SwiftUI
 struct PrizeCheckerHeaderView: View {
 	@Binding var timer: TimerState
 	@Binding var rotationAngle: Int
-	@Binding var activeModal: ActiveModal?
+	@Binding var activeModal: PrizeModal?
 	let hideTimer: Bool
 	
     var body: some View {

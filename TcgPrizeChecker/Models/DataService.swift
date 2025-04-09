@@ -19,17 +19,17 @@ struct DataService {
 		let (data, _) = try await URLSession.shared.data(from: url)
 		return try JSONDecoder().decode(T.self, from: data)
 	}
-	func fetchCardSet(cardSetNumber: String) async throws -> CardSet {
-		let urlString = "https://api.tcgdex.net/v2/en/sets/\(cardSetNumber)"
-		return try await fetchData(from: urlString, as: CardSet.self)
-	}
-	
-	
-//	func fetchCard(cardSetNumber: String, cardNumber: String) async throws -> Card {
-//		let urlString = "https://api.tcgdex.net/v2/en/cards/\(cardSetNumber)-\(cardNumber)"
-//		print("We're in the fetch function in DataService.")
-//		return try await fetchData(from: urlString, as: Card.self)
+//	func fetchCardSet(cardSetNumber: String) async throws -> CardSet {
+//		let urlString = "https://api.tcgdex.net/v2/en/sets/\(cardSetNumber)"
+//		return try await fetchData(from: urlString, as: CardSet.self)
 //	}
+	
+	
+	func fetchDetailedCard(cardId: String) async throws -> Card {
+		let urlString = "https://api.tcgdex.net/v2/en/cards/\(cardId)"
+		print("We're in the fetch function in DataService, url: \(urlString)")
+		return try await fetchData(from: urlString, as: Card.self)
+	}
 	
 	func fetchAllCards() async throws -> [Card] {
 		let urlString = "https://api.tcgdex.net/v2/en/cards"
@@ -77,3 +77,30 @@ enum DataServiceError: Error {
 	case invalidURL
 	case noDataRecieved
 }
+
+
+//private func fetchData<T: Decodable>(from urlString: String, as type: T.Type) async throws -> T {
+//	guard let url = URL(string: urlString) else {
+//		throw DataServiceError.invalidURL
+//	}
+//
+//	let (data, response) = try await URLSession.shared.data(from: url)
+//
+//	// Optional: Try logging the HTTP status
+//	if let httpResponse = response as? HTTPURLResponse {
+//		print("Status code: \(httpResponse.statusCode)")
+//	}
+//
+//	// Optional: Pretty print the JSON response for debugging
+//	if let jsonString = String(data: data, encoding: .utf8) {
+//		print("Raw JSON from \(urlString):\n\(jsonString)")
+//	}
+//
+//	do {
+//		return try JSONDecoder().decode(T.self, from: data)
+//	} catch {
+//		print("Decoding error from URL: \(urlString)")
+//		print("Decoding failed with error: \(error)")
+//		throw error
+//	}
+//}

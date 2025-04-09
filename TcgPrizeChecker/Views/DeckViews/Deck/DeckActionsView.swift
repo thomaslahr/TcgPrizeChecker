@@ -16,7 +16,6 @@ struct DeckActionsView: View {
 	@Binding var isShowingMessage: Bool
 	@Binding var deleteDeck: Bool
 	
-	
     var body: some View {
 		ZStack {
 			HStack {

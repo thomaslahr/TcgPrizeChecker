@@ -16,6 +16,10 @@ class AllCardsViewModel: ObservableObject {
 	@Published var cards: [Card] = []
 	@Published var name: CardSetName?
 	
+	
+	var cardLookup: [String: Card] {
+		Dictionary(uniqueKeysWithValues: cards.map { ($0.id, $0) })
+	}
 	@MainActor
 	func fetchAllCards() async {
 		do {
@@ -26,6 +30,10 @@ class AllCardsViewModel: ObservableObject {
 			print("Error fetching all cards: \(error.localizedDescription)")
 		}
 	}
+	
+	func fetchCardDetails(cardId: String) async throws -> Card {
+		return try await dataService.fetchDetailedCard(cardId: cardId)
+		}
 	
 	func downloadImage(from urlString: String) async throws -> Data {
 		guard let url = URL(string: urlString) else {
