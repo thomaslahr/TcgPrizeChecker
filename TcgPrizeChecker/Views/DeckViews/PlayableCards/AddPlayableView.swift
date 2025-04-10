@@ -9,18 +9,18 @@ import SwiftUI
 import SwiftData
 
 struct AddPlayableView: View {
+	@EnvironmentObject private var messageManager: MessageManager
 	@Environment(\.modelContext) private var modelContext
 	@Environment(\.dismiss) private var dismiss
 	@Query private var playableCards: [PlayableCard]
 	
 	@State private var isLongPress = false
-	@State private var messageContent = ""
-	@State private var isShowingMessage = false
-	@State private var imageCache: [String: UIImage] = [:]  // 🔹 Image cache
 
+	@State private var imageCache: [String: UIImage] = [:]  // 🔹 Image cache
 	let columns = [GridItem(.adaptive(minimum: 80))]
 	let selectedDeck: Deck?
-
+	let cardsInDeck: [PersistentCard]
+	
 	var body: some View {
 		VStack {
 			Text("Tap on a card to add it to a deck, hold to delete it.")
@@ -33,6 +33,13 @@ struct AddPlayableView: View {
 									.resizable()
 									.aspectRatio(contentMode: .fit)
 									.onTapGesture {
+										let copiesOfCard = cardsInDeck.filter { $0.id == card.id }.count
+										
+										if copiesOfCard >= 4 {
+											messageManager.messageContent = "You can't have more than 4 copies of a card in deck."
+											messageManager.showMessage()
+											return
+										}
 										addCardToDeck(card)
 									}
 									.onLongPressGesture {
@@ -57,9 +64,9 @@ struct AddPlayableView: View {
 			}
 			.scrollIndicators(.hidden)
 			.overlay {
-				MessageView(messageContent: messageContent)
-					.opacity(isShowingMessage ? 1 : 0)
-					.animation(.easeInOut(duration: 0.3), value: isShowingMessage)  // 🔹 Faster animation
+				MessageView(messageContent: messageManager.messageContent)
+					.opacity(messageManager.isShowingMessage ? 1 : 0)
+					.animation(.easeInOut(duration: 0.3), value: messageManager.isShowingMessage)  // 🔹 Faster animation
 			}
 		}
 		.padding(.horizontal, 10)
@@ -67,6 +74,8 @@ struct AddPlayableView: View {
 	}
 
 	private func addCardToDeck(_ card: PlayableCard) {
+		let copiesOfCard = cardsInDeck.filter { $0.id == card.id }.count
+		
 		guard let selectedDeck = selectedDeck else { return }
 		
 		let newDeckCard = PersistentCard(
@@ -81,29 +90,23 @@ struct AddPlayableView: View {
 		modelContext.insert(newDeckCard)
 		try? modelContext.save()
 		
-		messageContent = "\(card.name) was added to the \(selectedDeck.name) deck."
-		showMessage()
+		messageManager.messageContent = "\(card.name) was added to the \(selectedDeck.name) deck. (\(copiesOfCard + 1)/4)"
+		messageManager.showMessage()
 	}
 
 	private func deleteCard(_ card: PlayableCard) {
 		withAnimation {
-			messageContent = "\(card.name) was deleted as a playable card."
+			messageManager.messageContent = "\(card.name) was deleted as a playable card."
 			modelContext.delete(card)
 			try? modelContext.save()
-			showMessage()
+			messageManager.showMessage()
 		}
 	}
-	private func showMessage() {
-		isShowingMessage = true
-		DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-			withAnimation {
-				isShowingMessage = false
-			}
-		}
-	}
+	
+
 }
 
 
 #Preview {
-	AddPlayableView(selectedDeck: nil)
+	AddPlayableView(selectedDeck: nil, cardsInDeck: [])
 }

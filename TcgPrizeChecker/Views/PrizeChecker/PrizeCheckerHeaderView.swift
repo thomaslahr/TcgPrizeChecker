@@ -21,7 +21,7 @@ struct PrizeCheckerHeaderView: View {
 					print("Results button was pressed.")
 				} label: {
 					Image(systemName: "list.clipboard")
-						.font(.title)
+						.font(.system(size: 30))
 				}
 				.disabled(timer.isRunning)
 				.padding(.leading, 20)
@@ -48,7 +48,7 @@ struct PrizeCheckerHeaderView: View {
 					
 				} label: {
 					Image(systemName: "gear")
-						.font(.largeTitle)
+						.font(.system(size: 30))
 						.rotationEffect(.degrees(Double(rotationAngle)))
 				}
 				.disabled(timer.isRunning)
@@ -60,6 +60,6 @@ struct PrizeCheckerHeaderView: View {
     }
 }
 
-//#Preview {
-//    PrizeCheckerHeaderView()
-//}
+#Preview {
+	PrizeCheckerHeaderView(timer: .constant(TimerState()), rotationAngle: .constant(0), activeModal: .constant(.none), hideTimer: false)
+}

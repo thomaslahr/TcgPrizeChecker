@@ -20,7 +20,9 @@ struct TimerView: View {
 		
 		VStack{
 			Text(timerString)
-				.font(.system(.title, design: .monospaced))
+				.font(.system(size: 30))
+				.fontDesign(.rounded)
+				.fontWeight(.bold)
 				.onReceive(timer) { _ in
 					if isTimerRunning {
 						

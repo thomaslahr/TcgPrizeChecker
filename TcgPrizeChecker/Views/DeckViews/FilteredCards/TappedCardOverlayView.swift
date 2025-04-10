@@ -79,9 +79,7 @@ struct TappedCardOverlayView: View {
 					card: card,
 					currentCard: $currentCard,
 					selectedDeckID: selectedDeckID,
-					isShowingMessage: $isShowingMessage,
 					deckName: deckName,
-					messageContent: $messageContent,
 					isHorizontal: true,
 					cardsInDeck: deck)
 				.scaleEffect(1.5)

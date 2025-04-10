@@ -34,19 +34,19 @@ import SwiftData
 
 struct MainAppView: View {
 	//Can be removed if not deployed for iOS17 and below
-	@EnvironmentObject var deckSelectionViewModel: DeckSelectionViewModel
+	
 
 	var body: some View {
 		TabView {
 			MainDeckView()
 			//Can be removed if not deployed for iOS17 and below
-				.environmentObject(deckSelectionViewModel)
+				//.environmentObject(deckSelectionViewModel)
 				.tabItem {
 					Label("Deck", systemImage: "rectangle.on.rectangle.square.fill")
 				}
 
 			PrizeCheckView()
-				.environmentObject(deckSelectionViewModel)
+			//	.environmentObject(deckSelectionViewModel)
 				.tabItem {
 					Label("Prize Checker", systemImage: "gift.circle")
 				}

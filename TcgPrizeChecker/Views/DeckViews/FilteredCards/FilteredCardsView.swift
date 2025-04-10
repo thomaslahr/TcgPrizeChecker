@@ -10,6 +10,7 @@ import SwiftData
 //import AsyncAlgorithms
 
 struct FilteredCardsView: View {
+	@EnvironmentObject private var messageManager: MessageManager
 	@Environment(\.modelContext) private var modelContext
 	@Environment(\.dismiss) private var dismiss
 	@ObservedObject var allCardsViewModel: AllCardsViewModel
@@ -33,9 +34,6 @@ struct FilteredCardsView: View {
 	let searchText: String
 	@Query var decks: [Deck]
 	let isInputActive: Binding<Bool>
-	
-	@State private var isShowingMessage = false
-	@State private var messageContent = ""
 	
 	@State private var detailedCard: Card?
 	
@@ -73,8 +71,6 @@ struct FilteredCardsView: View {
 								currentCard: $currentCard,
 								wasCardAddedToDeck: $wasCardAddedToDeck,
 								wasCardAddedAsPlayable: $wasCardAddedAsPlayable,
-								messageContent: $messageContent,
-								isShowingMessage: $isShowingMessage,
 								tappedCard: $tappedCard,
 								isInputActive: isInputActive
 							)
@@ -107,10 +103,10 @@ struct FilteredCardsView: View {
 					tappedCard: $tappedCard,
 					currentCard: $currentCard,
 					isButtonDisabled: $isButtonDisabled,
-					isShowingMessage: $isShowingMessage,
+					isShowingMessage: $messageManager.isShowingMessage,
 					wasCardAddedToDeck: $wasCardAddedToDeck,
 					wasCardAddedAsPlayable: $wasCardAddedAsPlayable,
-					messageContent: $messageContent,
+					messageContent: $messageManager.messageContent,
 					cardOffset: $cardOffset,
 					isDragging: $isDragging,
 					searchText: searchText
@@ -118,8 +114,8 @@ struct FilteredCardsView: View {
 			}
 		}
 		.overlay {
-			MessageView(messageContent: messageContent)
-				.opacity(isShowingMessage ? 1 : 0)
+			MessageView(messageContent: messageManager.messageContent)
+				.opacity(messageManager.isShowingMessage ? 1 : 0)
 				.zIndex(1)
 			
 		}

@@ -19,8 +19,6 @@ struct FilteredCardRowView: View {
 	@Binding var currentCard: Card?
 	@Binding var wasCardAddedToDeck: Bool
 	@Binding var wasCardAddedAsPlayable: Bool
-	@Binding var messageContent: String
-	@Binding var isShowingMessage: Bool
 	@Binding var tappedCard: Card?
 	let isInputActive: Binding<Bool>
 	
@@ -68,9 +66,7 @@ struct FilteredCardRowView: View {
 				card: card,
 				currentCard: $currentCard,
 				selectedDeckID: selectedDeckID,
-				isShowingMessage: $isShowingMessage,
 				deckName: deckName,
-				messageContent: $messageContent,
 				isHorizontal: false,
 				cardsInDeck: deck
 			)

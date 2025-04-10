@@ -25,7 +25,6 @@ struct DeckPartView: View {
 		VStack {
 				Text("\(whichCards)")
 					.bold()
-			
 			.opacity(tappedDeck ? 0 : 1)
 			
 			HStack {

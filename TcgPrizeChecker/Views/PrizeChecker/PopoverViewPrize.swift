@@ -22,6 +22,7 @@ struct PopoverViewPrize: View {
 	let selectedDeckID: String
 	
 	@Binding var elapsedTime: TimeInterval
+	@Binding var timerState: TimerState
 	@State private var flipCard = false
 	@State private var showText = false
 	@State private var isAnimationDone = false
@@ -101,6 +102,7 @@ struct PopoverViewPrize: View {
 			
 			HStack {
 				Button {
+					timerState.string = "0.00"
 					dismiss()
 				} label: {
 					Text("OK")
@@ -127,6 +129,7 @@ struct PopoverViewPrize: View {
 						
 					
 					print("Result was saved to SwiftData!")
+					timerState.string = "0.00"
 					dismiss()
 					
 				} label: {
@@ -159,5 +162,5 @@ struct PopoverViewPrize: View {
 }
 
 #Preview {
-	PopoverViewPrize(deckState: DeckState(), userGuesses: [], guessResult: [], selectedDeckID: "", elapsedTime: .constant(75.0))
+	PopoverViewPrize(deckState: DeckState(), userGuesses: [], guessResult: [], selectedDeckID: "", elapsedTime: .constant(75.0), timerState: .constant(TimerState()))
 }

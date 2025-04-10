@@ -21,25 +21,21 @@ struct PrizeCheckView: View {
 	@State private var guessResult: [Answer] = Array(repeating: .guess, count: 6)
 	
 	//Booleans for å vise sub views:
-	@State private var showResultsPopover = false
 	
 	//Booleans knyttet opp til endringer i settings subview:
-	@State private var isRightCardOnTop = false
 	@State private var rotationAngle = 0
-	@State private var hideTimer = false
 	
 	//Variables knyttet opp til TimerView
 	@State private var timer = TimerState()
 	
 	@State private var deckState = DeckState()
 	
-	@State private var tappedDeck = false
-	@State private var tappedHand = false
-	@State private var isViewTapped = false
+	
 	@State private var deckSpacing: CGFloat = -72.0
 	@State private var handSpacing: CGFloat = -72.0
 	
 	@State private var activeModal: PrizeModal?
+	@State private var uiState = UIState()
 	
 	private var selectedDeck: Deck? {
 		decks.first(where: { $0.id == deckSelectionViewModel.selectedDeckID})
@@ -48,7 +44,7 @@ struct PrizeCheckView: View {
 	var body: some View {
 		NavigationStack {
 			ZStack {
-				if tappedDeck || tappedHand {
+				if uiState.tappedDeck || uiState.tappedHand {
 					Color.black.opacity(0.5) // Semi-transparent background
 						.edgesIgnoringSafeArea(.all) // Make it cover the entire screen
 						.transition(.opacity)
@@ -59,37 +55,53 @@ struct PrizeCheckView: View {
 						timer: $timer,
 						rotationAngle: $rotationAngle,
 						activeModal: $activeModal,
-						hideTimer: hideTimer
+						hideTimer: uiState.hideTimer
 					)
 					ScrollView {
 						// Deck-picker-en øverst i viewet
 						if deckSelectionViewModel.selectedDeckID != nil {
-							DeckPickerView(decks: decks)
-								.disabled(timer.isRunning && !deckState.cardsInHand.isEmpty)
+							HStack(spacing: 2) {
+								Text("Current Deck:")
+									.fontWeight(.semibold)
+									.fontDesign(.rounded)
+								CustomPickerMenuView(decks: decks)
+									.disabled(timer.isRunning && !deckState.cardsInHand.isEmpty)
+							}
 						}
 						
 						//"Hoveddelen av viewet hvor de tre radene med kort er.
-						if !deckState.cardsInHand.isEmpty {
+							if !deckState.cardsInHand.isEmpty {
+				
+									DeckAndHandView(
+										deckSpacing: $deckSpacing,
+										handSpacing: $handSpacing,
+										tappedDeck: $uiState.tappedDeck,
+										tappedHand: $uiState.tappedHand,
+										isViewTapped: $uiState.isViewTapped,
+										deck: deckState,
+										isRightCardOnTop: uiState.isRightCardOnTop
+									)
+								
+								
+								//Gjett hvilke kort som er prize cards.
+								GuessPrizeCardsView(
+									userGuesses: $userGuesses,
+									guessResult: $guessResult,
+									isTimerRunning: timer.isRunning
+								)
+								.opacity(uiState.tappedDeck || uiState.tappedHand ? 0 : 1)
+								.padding()
+							}
 							
-							DeckAndHandView(
-								deckSpacing: $deckSpacing,
-								handSpacing: $handSpacing,
-								tappedDeck: $tappedDeck,
-								tappedHand: $tappedHand,
-								isViewTapped: $isViewTapped,
-								deck: deckState,
-								isRightCardOnTop: isRightCardOnTop
-							)
+						if deckState.cardsInHand.isEmpty && uiState.showResultsPopover == false {
+								PrizeCheckDeckGridView(selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "")
+									.opacity(timer.isRunning ? 0 : 1)
+							}
+									
+								
 							
-							//Gjett hvilke kort som er prize cards.
-							GuessPrizeCardsView(
-								userGuesses: $userGuesses,
-								guessResult: $guessResult,
-								isTimerRunning: timer.isRunning
-							)
-							.opacity(tappedDeck || tappedHand ? 0 : 1)
-							.padding()
-						}
+						
+						
 						
 						if let selectedDeck = selectedDeck {
 							if selectedDeck.cards.count < 14 {
@@ -97,7 +109,7 @@ struct PrizeCheckView: View {
 							}
 						}
 					}
-					.scrollDisabled(tappedDeck || tappedHand)
+					.scrollDisabled(uiState.tappedDeck || uiState.tappedHand)
 					//Hvis brukeren endrer deck i f.eks MainDeckView, så nullstilles dette viewet, så det ikke vises noen kort. 17.12.24
 					
 					.onChange(of: deckSelectionViewModel.selectedDeckID) { oldValue, newValue in
@@ -123,7 +135,7 @@ struct PrizeCheckView: View {
 							// App is no longer active → reset everything
 							timer.isRunning = false
 							timer.elapsed = 0
-							timer.string = "0.00"
+							//timer.string = "0.00"
 							print("App moved to background or became inactive — timer stopped and reset.")
 						}
 					}
@@ -131,7 +143,7 @@ struct PrizeCheckView: View {
 						fullViewReset()
 						
 						timer.isRunning = false
-						timer.string = "0.00"
+						//timer.string = "0.00"
 					}
 					
 					//Knappene nederst i viewet, over TabViewet.
@@ -161,7 +173,7 @@ struct PrizeCheckView: View {
 										checkUserGuesses()
 										//	showPrizeCards = true
 										timer.isRunning = false
-										showResultsPopover = true
+										uiState.showResultsPopover = true
 									} else {
 										//Shuffle
 										shuffleDeck()
@@ -200,7 +212,7 @@ struct PrizeCheckView: View {
 								.presentationDetents([.medium])
 							
 						case .settings:
-							PrizeSettingsView(hideTimer: $hideTimer, isRightCardOnTop: $isRightCardOnTop)
+							PrizeSettingsView(hideTimer: $uiState.hideTimer, isRightCardOnTop: $uiState.isRightCardOnTop)
 								.presentationDetents([.medium])
 							
 						case .results:
@@ -209,13 +221,13 @@ struct PrizeCheckView: View {
 							}
 						}
 					}
-					.popover(isPresented: $showResultsPopover) {
+					.popover(isPresented: $uiState.showResultsPopover) {
 						PopoverViewPrize(
 							deckState: deckState,
 							userGuesses: userGuesses,
 							guessResult: guessResult,
 							selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "",
-							elapsedTime: $timer.elapsed)
+							elapsedTime: $timer.elapsed, timerState: $timer)
 						.interactiveDismissDisabled()
 						.onAppear() {
 							fullViewReset()
@@ -223,9 +235,9 @@ struct PrizeCheckView: View {
 						
 					}
 				}
-				//			.navigationTitle(isTimerRunning ? "" : "Prize Checker")
-				//			.navigationBarTitleDisplayMode(.inline)
 			}
+			.navigationTitle("Prize Check")
+			.navigationBarTitleDisplayMode(.inline)
 			.alert("Timer stopped", isPresented: $timer.ranFor10Min) {
 				Button("OK", role: .cancel) { timer.ranFor10Min = false }
 			} message: {
@@ -291,7 +303,7 @@ struct PrizeCheckView: View {
 		deckState.cardsInHand.removeAll()
 		//prizeCards.removeAll()
 		//elapsedTime = 0.0
-		timer.string = "0.00"
+		//timer.string = "0.00"
 	}
 }
 
@@ -329,4 +341,13 @@ enum PrizeModal: Identifiable {
 	case results
 	
 	var id: Int { hashValue }
+}
+
+private struct UIState {
+	var showResultsPopover = false
+	var isRightCardOnTop = false
+	var hideTimer = false
+	var tappedDeck = false
+	var tappedHand = false
+	var isViewTapped = false
 }

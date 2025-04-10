@@ -12,10 +12,9 @@ struct DeckActionsView: View {
 	@Environment(\.modelContext) private var modelContext
 	var decks: [Deck]
 	var selectedDeck: Deck?
-	@Binding var createDeck: Bool
 	@Binding var isShowingMessage: Bool
 	@Binding var deleteDeck: Bool
-	
+	@Binding var activeModal: DeckModal?
     var body: some View {
 		ZStack {
 			HStack {
@@ -23,7 +22,7 @@ struct DeckActionsView: View {
 					if decks.count > 9 {
 						showMessage()
 					} else {
-						createDeck.toggle()
+						activeModal = .create
 					}
 				} label: {
 					Image(systemName: "plus.circle")
@@ -37,6 +36,8 @@ struct DeckActionsView: View {
 				if !decks.isEmpty {
 					HStack(spacing: 2){
 						Text("Current deck: ")
+							.fontDesign(.rounded)
+							.fontWeight(.semibold)
 						CustomPickerMenuView(decks: decks)
 					}
 					//.frame(maxWidth: .infinity, alignment: .center)
@@ -44,6 +45,8 @@ struct DeckActionsView: View {
 					HStack {
 						Image(systemName: "arrow.left")
 						Text("Create a deck to get started.")
+							.fontDesign(.rounded)
+							.fontWeight(.semibold)
 					}
 						.frame(maxWidth: .infinity, alignment: .center)
 				}
@@ -87,8 +90,10 @@ struct DeckActionsView: View {
 #Preview {
 	DeckActionsView(
 		decks: [Deck.sampleDeck],
-		createDeck: .constant(false),
 		isShowingMessage: .constant(false),
-		deleteDeck: .constant(false)
+		deleteDeck: .constant(false),
+		activeModal: .constant(.none)
 	)
+	.modelContainer(for: Deck.self, inMemory: true)
+	.environmentObject(DeckSelectionViewModel())
 }

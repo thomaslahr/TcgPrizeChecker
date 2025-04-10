@@ -14,19 +14,22 @@ struct MessageView: View {
 	let messageContent: String
     var body: some View {
 		GeometryReader{ gr in
-			ZStack {
-				RoundedRectangle(cornerRadius: 20)
-					.fill(.thinMaterial)
-					.frame(maxWidth: gr.size.width - 100, maxHeight: 80)
-					.shadow(color: .black.opacity(0.4), radius: 8, x: 5, y: 5)
+				
 				
 				Text(messageContent)
 					.foregroundStyle(colorScheme == .dark ? .white : .black)
 					.bold()
 					.fontDesign(.rounded)
-					.multilineTextAlignment(.center)
+					.multilineTextAlignment(.leading)
 					.frame(maxWidth: 230)
-			}
+					.padding(30)
+					.background {
+						RoundedRectangle(cornerRadius: 20)
+							.fill(.thinMaterial)
+							.frame(maxWidth: gr.size.width - 100, maxHeight: 120)
+							.shadow(color: .black.opacity(0.4), radius: 8, x: 5, y: 5)
+					}
+			
 			.position(x: gr.size.width / 2, y: gr.size.height / 1.2)
 			
 			
@@ -36,5 +39,5 @@ struct MessageView: View {
 }
 
 #Preview {
-	MessageView(messageContent: "The selected card was deleted from the deck.")
+	MessageView(messageContent: "The selected card was deleted from the deck. The selected card was deleted from the deck.")
 }

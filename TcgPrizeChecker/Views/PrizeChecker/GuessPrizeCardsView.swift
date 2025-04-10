@@ -12,18 +12,31 @@ struct GuessPrizeCardsView: View {
 	@Binding var userGuesses: [String]
 	@Binding var guessResult: [Answer]
 	
+	@FocusState private var focusedFieldIndex: Int?
 	let isTimerRunning: Bool
 	
-    var body: some View {
+	var body: some View {
 		VStack {
 			Text("Guess the Prize Cards:")
+				.fontWeight(.semibold)
+				.fontDesign(.rounded)
 			ForEach(0..<userGuesses.count, id: \.self) { index in
 				HStack {
 					TextField("Enter name of card:", text: $userGuesses[index])
-						.foregroundStyle(!isTimerRunning ? .gray : .primary)
+					//	.foregroundStyle(!isTimerRunning ? .gray : .primary)
+						.focused($focusedFieldIndex, equals: index)
 						.autocorrectionDisabled()
 						.disabled(!isTimerRunning)
-						.textFieldStyle(.roundedBorder)
+						.textFieldStyle(.plain)
+						.padding(10)
+						
+						.background {
+							RoundedRectangle(cornerRadius: 8)
+								.stroke(lineWidth: 2)
+								.foregroundStyle(focusedFieldIndex == index ? .blue : .gray)
+								.animation(.easeIn(duration: 0.1), value: focusedFieldIndex == index)
+							
+						}
 					
 					Image(systemName: guessResult[index].sfSymbolText)
 						.font(.largeTitle)
@@ -31,7 +44,7 @@ struct GuessPrizeCardsView: View {
 				}
 			}
 		}
-    }
+	}
 }
 
 #Preview {

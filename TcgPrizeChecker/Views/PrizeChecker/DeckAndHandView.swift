@@ -33,13 +33,14 @@ struct DeckAndHandView: View {
 			.opacity(tappedHand ? 0 : 1)
 			.scaleEffect(tappedDeck ? 2.0 : 1.0)
 			.zIndex(tappedDeck ? 1 : 0) // Bring to front when tapped
+			.offset(y: tappedDeck ? 150 : 0)
 			.onTapGesture {
 				withAnimation(.easeInOut(duration: 0.2)) {
 					tappedDeck.toggle()
 					isViewTapped.toggle()
 				}
 			}
-			.padding(.top, tappedDeck ? 150 : 0)
+			//.padding(.top, tappedDeck ? 150 : 0)
 			
 			
 			DeckPartView(
@@ -54,17 +55,16 @@ struct DeckAndHandView: View {
 			.opacity(tappedDeck ? 0 : 1)
 			.scaleEffect(tappedHand ? 2.0 : 1.0)
 			.zIndex(tappedHand ? 1 : 0) // Bring to front when tapped
+			.offset(y: tappedHand ? -100 : 0)
 			.onTapGesture {
 				withAnimation(.easeInOut(duration: 0.2)) {
 					tappedHand.toggle()
 					isViewTapped.toggle()
 				}
 			}
-			.padding(.bottom, tappedHand ? 350 : 0)
-			
-			
-			
+			//.padding(.bottom, tappedHand ? 350 : 0)
 		}
+		.frame(maxHeight: tappedDeck ? .infinity : nil)
     }
 }
 

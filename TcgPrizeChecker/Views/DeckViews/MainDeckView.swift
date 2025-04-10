@@ -23,6 +23,8 @@ struct MainDeckView: View {
 	
 	@FocusState var isInputActive: Bool
 	
+	@State private var activeModal: DeckModal?
+	
 	private var selectedDeck: Deck? {
 		decks.first(where: { $0.id == deckSelectionViewModel.selectedDeckID})
 	}
@@ -71,7 +73,7 @@ struct MainDeckView: View {
 						Button {
 							withAnimation(.easeInOut(duration: 0.6)) {
 								uiState.rotationAngle += 120
-								uiState.showSettingsView.toggle()
+								activeModal = .settings
 							}
 						} label: {
 							Image(systemName: "gear")
@@ -94,12 +96,17 @@ struct MainDeckView: View {
 					DeckActionsView(
 						decks: decks,
 						selectedDeck: selectedDeck,
-						createDeck: $uiState.createDeck,
 						isShowingMessage: $uiState.isShowingMessage,
-						deleteDeck: $uiState.deleteDeck
+						deleteDeck: $uiState.deleteDeck,
+						activeModal: $activeModal
 					)
 					
-					DeckInfoView(viewSelection: $uiState.viewSelection, addPlayableCards: $uiState.addPlayableCards, decks: decks, selectedDeck: selectedDeck)
+					DeckInfoView(
+						viewSelection: $uiState.viewSelection,
+						decks: decks,
+						selectedDeck: selectedDeck,
+						activeModal: $activeModal
+					)
 					
 					switch uiState.viewSelection {
 					case 0:
@@ -131,19 +138,20 @@ struct MainDeckView: View {
 			.navigationBarTitleDisplayMode(.inline)
 		}
 		// Playable cards er kommentert ut til appen har helt implementert muligheten til å ha flere deck
-		.sheet(isPresented: $uiState.addPlayableCards) {
-			PlayableMainView(selectedDeck: selectedDeck)
-				.presentationContentInteraction(.scrolls)
-		}
-		.sheet(isPresented: $uiState.createDeck) {
-			CreateDeckSheetView { newDeck in
-				deckSelectionViewModel.selectedDeckID = newDeck.id
+		.sheet(item: $activeModal) { modal in
+			switch modal {
+			case .playable:
+				PlayableMainView(selectedDeck: selectedDeck)
+					.presentationContentInteraction(.scrolls)
+			case .create:
+				CreateDeckSheetView { newDeck in
+					deckSelectionViewModel.selectedDeckID = newDeck.id
+				}
+				.presentationDetents([.medium])
+			case .settings:
+					MainSettingsView()
+						.presentationDetents([.medium])
 			}
-				.presentationDetents([.medium])
-		}
-		.sheet(isPresented: $uiState.showSettingsView) {
-			MainSettingsView()
-				.presentationDetents([.medium])
 		}
 		.onAppear {
 			validationSelection()
@@ -190,14 +198,18 @@ extension Binding where Value == String? {
 }
 
 
+enum DeckModal: Identifiable {
+	case playable
+	case create
+	case settings
+	
+	var id: Int { hashValue }
+}
 private struct UIState {
 	var viewSelection = 0
 	var debounceTimer: Timer?
 	var rotationAngle = 0
-	var addPlayableCards = false
-	var createDeck = false
 	var deleteDeck = false
 	var showImage = false
-	var showSettingsView = false
 	var isShowingMessage = false
 }

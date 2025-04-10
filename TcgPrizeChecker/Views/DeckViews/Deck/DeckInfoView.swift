@@ -9,9 +9,9 @@ import SwiftUI
 
 struct DeckInfoView: View {
 	@Binding var viewSelection: Int
-	@Binding var addPlayableCards: Bool
 	var decks: [Deck]
 	var selectedDeck: Deck?
+	@Binding var activeModal: DeckModal?
 	
     var body: some View {
 		Picker(selection: $viewSelection) {
@@ -30,7 +30,7 @@ struct DeckInfoView: View {
 			}
 			Spacer()
 			Button {
-				addPlayableCards.toggle()
+				activeModal = .playable
 			} label: {
 					Label("Playables", systemImage: "tray.2")
 			}
@@ -45,7 +45,6 @@ struct DeckInfoView: View {
 #Preview {
 	DeckInfoView(
 		viewSelection: .constant(0),
-		addPlayableCards: .constant(false),
-		decks: [Deck.sampleDeck]
+		decks: [Deck.sampleDeck], activeModal: .constant(.none)
 	)
 }

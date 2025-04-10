@@ -21,9 +21,12 @@ struct PlayableMainView: View {
 	let selectedDeck: Deck?
 	@Query var decks: [Deck]
 	
+	
 	let columns =  [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
 	
 	var body: some View {
+		
+		let selectedDeckID = deckSelectionViewModel.selectedDeckID
 		VStack {
 			HStack(spacing: 3) {
 				if deckSelectionViewModel.selectedDeckID != nil {
@@ -49,7 +52,10 @@ struct PlayableMainView: View {
 							AddEnergyCardView(selectedDeck: selectedDeck)
 						}
 					default:
-							AddPlayableView(selectedDeck: selectedDeck)
+						var deck: [PersistentCard] {
+							decks.first(where: { $0.id == selectedDeckID })?.cards ?? []
+						}
+						AddPlayableView(selectedDeck: selectedDeck, cardsInDeck: deck)
 					}
 			}
 		}
