@@ -15,6 +15,8 @@ class SearchViewModel: ObservableObject {
 	@Published var results: [Card] = []
 	@Published var searchTask: Task<Void, Never>? = nil
 	
+	private var debounceTimer: Timer?
+	
 	func filterCards(cards: [Card], searchText: String, cardFilters: [String]) -> [Card] {
 		return cards.filter { card in
 			cardFilters.contains { card.id.contains($0) } &&
@@ -54,6 +56,15 @@ class SearchViewModel: ObservableObject {
 		searchTask = Task {
 			for await _ in [query].async.debounce(for: .milliseconds(300)) {
 				await performSearch(query: query, allCards: allCards)
+			}
+		}
+	}
+	
+	func debounceSearch(query: String, allCards: [Card]) {
+		debounceTimer?.invalidate()
+		debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) {_ in
+			Task {
+				await self.performSearch(query: query, allCards: allCards)
 			}
 		}
 	}

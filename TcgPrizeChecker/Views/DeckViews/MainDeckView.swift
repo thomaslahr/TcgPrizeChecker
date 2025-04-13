@@ -30,10 +30,14 @@ struct MainDeckView: View {
 		decks.first(where: { $0.id == deckSelectionViewModel.selectedDeckID})
 	}
 	
-	@State private var isLoadingDeck = false
-	@State private var readyDeckID: String? = nil
-	@State private var lastRenderedDeckID: String?
 	@State private var showProgressView = false
+	
+	@StateObject var deckViewModel: DeckViewModel
+	
+	init(imageCache: ImageCacheViewModel) {
+			_imageCache = ObservedObject(wrappedValue: imageCache)
+			_deckViewModel = StateObject(wrappedValue: DeckViewModel(imageCache: imageCache))
+		}
 	
 	var body: some View {
 		NavigationStack {
@@ -60,7 +64,7 @@ struct MainDeckView: View {
 						
 					}
 					.onChange(of: searchViewModel.searchText) { oldValue, newValue in
-						debounceSearch(newValue)
+						searchViewModel.debounceSearch(query: newValue, allCards: allCardsViewModel.cards)
 						//handleSearch(newValue)
 					}
 					.overlay(alignment: .trailing) {
@@ -121,25 +125,25 @@ struct MainDeckView: View {
 					case 0:
 						DeckListView(selectedDeckID: deckSelectionViewModel.selectedDeckID)
 					default:
-						if isLoadingDeck {
-								if let newDeck = selectedDeck, isDeckCached(newDeck) {
+						if deckViewModel.isLoadingDeck {
+							if let newDeck = selectedDeck, deckViewModel.isDeckCached(newDeck) {
 									Color.black
 										.frame(maxWidth: .infinity, maxHeight: .infinity)
 								} else {
 									ProgressView("Loading deck...")
 										.frame(maxWidth: .infinity, maxHeight: .infinity)
 								}
-							} else if let id = lastRenderedDeckID {
+						} else if deckViewModel.lastRenderedDeckID != nil {
 								ZStack {
-									if isLoadingDeck {
-										if let newDeck = selectedDeck, isDeckCached(newDeck) {
+									if deckViewModel.isLoadingDeck {
+										if let newDeck = selectedDeck, deckViewModel.isDeckCached(newDeck) {
 											Color.black
 												.frame(maxWidth: .infinity, maxHeight: .infinity)
 										} else {
 											ProgressView("Loading deck...")
 												.frame(maxWidth: .infinity, maxHeight: .infinity)
 										}
-									} else if let id = lastRenderedDeckID {
+									} else if let id = deckViewModel.lastRenderedDeckID {
 										DeckGridView(imageCache: imageCache, selectedDeckID: id)
 											.transition(.opacity)
 											.animation(.easeInOut(duration: 0.35), value: id)
@@ -163,21 +167,21 @@ struct MainDeckView: View {
 			.onChange(of: deckSelectionViewModel.selectedDeckID) { _, newID in
 				guard let newDeck = decks.first(where: { $0.id == newID }) else { return }
 
-				isLoadingDeck = true
+				deckViewModel.isLoadingDeck = true
 				Task {
-					await preloadImages(for: newDeck)
+					await deckViewModel.preloadImages(for: newDeck)
 
 					await MainActor.run {
-						readyDeckID = newID
-						lastRenderedDeckID = newID
+						deckViewModel.readyDeckID = newID
+						deckViewModel.lastRenderedDeckID = newID
 
 						// Add a delay ONLY if the images were cached
-						if isDeckCached(newDeck) {
+						if deckViewModel.isDeckCached(newDeck) {
 							DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-								isLoadingDeck = false
+								deckViewModel.isLoadingDeck = false
 							}
 						} else {
-							isLoadingDeck = false
+							deckViewModel.isLoadingDeck = false
 						}
 					}
 				}
@@ -209,49 +213,11 @@ struct MainDeckView: View {
 			}
 		}
 		.onAppear {
-			validationSelection()
+			deckSelectionViewModel.validateDeckSelection(using: decks)
 		}
 		.onChange(of: decks) {
-			validationSelection()
+			deckSelectionViewModel.validateDeckSelection(using: decks)
 		}
-	}
-	
-	private func debounceSearch(_ query: String) {
-		uiState.debounceTimer?.invalidate()
-		uiState.debounceTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: false) {_ in
-			Task {
-				await searchViewModel.performSearch(query: query, allCards: allCardsViewModel.cards)
-			}
-		}
-	}
-	private func validationSelection() {
-		if deckSelectionViewModel.selectedDeckID == nil || !decks.contains(where: { $0.id == deckSelectionViewModel.selectedDeckID}) {
-			deckSelectionViewModel.selectedDeckID = decks.first?.id
-		}
-	}
-	
-	func preloadImages(for deck: Deck) async {
-		for card in deck.cards {
-			// Skip if already cached
-			if imageCache.cache[card.uniqueId] != nil {
-				continue
-			}
-			
-			// Load and downscale on a background thread
-			await Task.detached(priority: .utility) {
-				guard let image = UIImage(data: card.imageData) else { return }
-				let targetSize = CGSize(width: 140, height: 200)
-				guard let downscaled = image.downscaled(to: targetSize) else { return }
-				
-				await MainActor.run {
-					imageCache.setImage(downscaled, for: card.uniqueId)
-				}
-			}.value // Wait for the detached task to finish before continuing
-		}
-	}
-	
-	private func isDeckCached(_ deck: Deck) -> Bool {
-		deck.cards.allSatisfy { imageCache.cache[$0.uniqueId] != nil }
 	}
 }
 
@@ -286,7 +252,6 @@ enum DeckModal: Identifiable {
 }
 private struct UIState {
 	var viewSelection = 0
-	var debounceTimer: Timer?
 	var rotationAngle = 0
 	var deleteDeck = false
 	var showImage = false
