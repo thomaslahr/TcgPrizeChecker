@@ -12,21 +12,19 @@ import SwiftData
 
 struct PrizeCheckDeckGridView: View {
 	@Environment(\.modelContext) private var modelContext
-	@State private var isShowingMessage = false
-	@State private var messageContent = ""
 	@State private var cardOffset: CGFloat = 0
 	@State private var isDragging = false
 	@State private var cardOpacity: Double = 1.0
-
+	
 	@Query var deck: [PersistentCard]
 	@Query var decks: [Deck]
-
+	
 	let selectedDeckID: String
-	let columns = [GridItem(.adaptive(minimum: 50))]
+	let columns = [GridItem(.adaptive(minimum: 60))]
 	
 	
 	@State private var currentCardIndex: Int?
-	@State private var imageCache: [String: UIImage] = [:]
+	@ObservedObject var imageCache: ImageCacheViewModel
 	
 	var body: some View {
 		ZStack {
@@ -35,20 +33,27 @@ struct PrizeCheckDeckGridView: View {
 					LazyVGrid(columns: columns) {
 						if let selectedDeck = decks.first(where: {$0.id == selectedDeckID}) {
 							ForEach(selectedDeck.cards, id: \.uniqueId) { card in
-								if let cachedImage = imageCache[card.uniqueId] {
+								if let cachedImage = imageCache.cache[card.uniqueId] {
 									Image(uiImage: cachedImage)
 										.resizable()
 										.aspectRatio(contentMode: .fit)
-										.frame(maxWidth: 55)
-																	
-								} else if let image = UIImage(data: card.imageData) {
-									Image(uiImage: image)
-										.resizable()
-										.aspectRatio(contentMode: .fit)
-										.frame(maxWidth: 55)
+										.frame(maxWidth: 70)
 										.onAppear {
-											imageCache[card.uniqueId] = image // Store it in cache
+											print("Loading cached images")
 										}
+									
+								}  else if let image = UIImage(data: card.imageData) {
+									let targetSize = CGSize(width: 140, height: 200)
+									if let downscaled = image.downscaled(to: targetSize) {
+										Image(uiImage: downscaled)
+											.resizable()
+											.aspectRatio(contentMode: .fit)
+											.frame(maxWidth: 70)
+											.onAppear {
+												print("Loading and caching downscaled image")
+												imageCache.cache[card.uniqueId] = downscaled
+											}
+									}
 								}
 							}
 							.shadow(radius: 5)
@@ -56,6 +61,7 @@ struct PrizeCheckDeckGridView: View {
 					}
 				}
 				.padding()
+				
 			}
 		}
 		
@@ -63,5 +69,7 @@ struct PrizeCheckDeckGridView: View {
 }
 
 #Preview {
-	PrizeCheckDeckGridView(selectedDeckID: "3318B2A1-9A6E-4B34-884F-E8D52A5811A5")
+	PrizeCheckDeckGridView(selectedDeckID: "3318B2A1-9A6E-4B34-884F-E8D52A5811A5", imageCache: ImageCacheViewModel())
 }
+
+

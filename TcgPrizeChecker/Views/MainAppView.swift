@@ -8,6 +8,7 @@
 import SwiftUI
 import SwiftData
 
+
 //struct MainAppView: View {
 //	@StateObject private var deckSelectionViewModel = DeckSelectionViewModel()
 //	
@@ -35,17 +36,17 @@ import SwiftData
 struct MainAppView: View {
 	//Can be removed if not deployed for iOS17 and below
 	
-
+	@StateObject private var imageCache = ImageCacheViewModel()
 	var body: some View {
 		TabView {
-			MainDeckView()
+			MainDeckView(imageCache: imageCache)
 			//Can be removed if not deployed for iOS17 and below
 				//.environmentObject(deckSelectionViewModel)
 				.tabItem {
 					Label("Deck", systemImage: "rectangle.on.rectangle.square.fill")
 				}
 
-			PrizeCheckView()
+			PrizeCheckView(imageCache: imageCache)
 			//	.environmentObject(deckSelectionViewModel)
 				.tabItem {
 					Label("Prize Checker", systemImage: "gift.circle")

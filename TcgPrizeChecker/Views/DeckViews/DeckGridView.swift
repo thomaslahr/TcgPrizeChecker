@@ -10,53 +10,68 @@ import SwiftData
 
 struct DeckGridView: View {
 	@Environment(\.modelContext) private var modelContext
-	@State private var isShowingMessage = false
-	@State private var messageContent = ""
+	@EnvironmentObject private var messageManager: MessageManager
+	@ObservedObject var imageCache: ImageCacheViewModel
 	@State private var cardOffset: CGFloat = 0
 	@State private var isDragging = false
 	@State private var cardOpacity: Double = 1.0
-
+	
+	
 	@Query var deck: [PersistentCard]
 	@Query var decks: [Deck]
-
+	
 	let selectedDeckID: String
 	let columns = [GridItem(.adaptive(minimum: 65))]
 	
 	
 	@State private var currentCardIndex: Int?
-	@State private var imageCache: [String: UIImage] = [:]
+	//	@State private var imageCache: [String: UIImage] = [:]
 	
 	var body: some View {
 		ZStack {
 			ScrollView {
-				Text("Tap on a card to enlarge, hold to delete it.")
-					.font(.callout)
 				ZStack {
 					LazyVGrid(columns: columns) {
 						if let selectedDeck = decks.first(where: {$0.id == selectedDeckID}) {
 							ForEach(selectedDeck.cards, id: \.uniqueId) { card in
-								if let cachedImage = imageCache[card.uniqueId] {
-									Image(uiImage: cachedImage)
-										.resizable()
-										.aspectRatio(contentMode: .fit)
-										.frame(maxWidth: 75)
-										.onTapGesture {
-											if let selectedDeck = decks.first(where: { $0.id  == selectedDeckID }),
-											   let index = selectedDeck.cards.firstIndex(where: {$0.uniqueId == card.uniqueId}) {
-												currentCardIndex = index
+								let isRevealed = imageCache.revealedCardIDs.contains(card.uniqueId)
+								
+								Group {
+									if let cachedImage = imageCache.cache[card.uniqueId] {
+										Image(uiImage: cachedImage)
+											.resizable()
+											.aspectRatio(contentMode: .fit)
+											.frame(maxWidth: 75)
+											.opacity(isRevealed ? 1 : 0)
+											.onAppear {
+												if !isRevealed {
+													imageCache.revealCard(card)
+												}
 											}
-										}
-										.onLongPressGesture {
-											deleteCard(card)
-										}
-								} else if let image = UIImage(data: card.imageData) {
-									Image(uiImage: image)
-										.resizable()
-										.aspectRatio(contentMode: .fit)
-										.frame(maxWidth: 75)
-										.onAppear {
-											imageCache[card.uniqueId] = image // Store it in cache
-										}
+											.onTapGesture {
+												if let index = selectedDeck.cards.firstIndex(where: { $0.uniqueId == card.uniqueId }) {
+													currentCardIndex = index
+												}
+											}
+											.onLongPressGesture {
+												deleteCard(card)
+											}
+									} else if let image = UIImage(data: card.imageData) {
+										let targetSize = CGSize(width: 140, height: 200)
+		  if let downscaled = image.downscaled(to: targetSize) {
+			  Image(uiImage: downscaled)
+				  .resizable()
+				  .aspectRatio(contentMode: .fit)
+				  .frame(maxWidth: 70)
+				  .opacity(isRevealed ? 1 : 0)
+				  .onAppear {
+					  if !isRevealed {
+						  imageCache.revealCard(card)
+					  }
+					  imageCache.setImage(downscaled, for: card.uniqueId)
+				  }
+		  }
+	  }
 								}
 							}
 						}
@@ -65,16 +80,19 @@ struct DeckGridView: View {
 				.padding()
 			}
 		}
+		.onChange(of: selectedDeckID) {
+			print("Deck changed")
+		}
 		.overlay {
-			MessageView(messageContent: messageContent)
-				.opacity(isShowingMessage ? 1 : 0)
+			MessageView(messageContent: messageManager.messageContent)
+				.opacity(messageManager.isShowingMessage ? 1 : 0)
 		}
 		.blur(radius: currentCardIndex != nil ? 5 : 0)
 		
 		if let selectedDeck = decks.first(where: { $0.id == selectedDeckID }),
 		   let index = currentCardIndex,
 		   selectedDeck.cards.indices.contains(index),
-		   let uiImage = imageCache[selectedDeck.cards[index].uniqueId] {
+		   let uiImage = UIImage(data: selectedDeck.cards[index].imageData) {
 			DeckCardOverlayView(
 				decks: decks,
 				selectedDeckID: selectedDeckID,
@@ -85,30 +103,39 @@ struct DeckGridView: View {
 				cardOpacity: $cardOpacity,
 				isDragging: $isDragging
 			)
+			.frame(maxWidth: .infinity, maxHeight: .infinity)
 		}
 	}
 	
 	private func deleteCard(_ card: PersistentCard) {
 		withAnimation {
 			if let selectedDeck = decks.first(where: {$0.id == selectedDeckID}) {
-				messageContent = "\(card.name) was deleted from the \(selectedDeck.name) deck."
+				messageManager.messageContent = "\(card.name) was deleted from the \(selectedDeck.name) deck."
 			}
 			modelContext.delete(card)
 			try? modelContext.save()
-			showMessage()
+			messageManager.showMessage()
 		}
 	}
-	
-	private func showMessage() {
-		isShowingMessage = true
-		DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-			withAnimation {
-				isShowingMessage = false
-			}
-		}
-	}
+	//	private func revealCard(_ card: PersistentCard) {
+	//		guard !revealedCardIDs.contains(card.uniqueId) else { return }
+	//
+	//		// Get the index of the card in the selectedDeck's cards array
+	//		if let selectedDeck = decks.first(where: { $0.id == selectedDeckID }),
+	//		   let index = selectedDeck.cards.firstIndex(where: { $0.uniqueId == card.uniqueId }) {
+	//
+	//			// Use the index to create a sequential delay
+	//			let delay = Double(index) * 0.05 // Delay based on card's index in the array
+	//
+	//			DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+	//				withAnimation(.easeIn(duration: 0.25)) {
+	//					_ = revealedCardIDs.insert(card.uniqueId)
+	//				}
+	//			}
+	//		}
+	//	}
 }
 
 #Preview {
-	DeckGridView(selectedDeckID: "3318B2A1-9A6E-4B34-884F-E8D52A5811A5")
+	DeckGridView(imageCache: ImageCacheViewModel(), selectedDeckID: "3318B2A1-9A6E-4B34-884F-E8D52A5811A5")
 }

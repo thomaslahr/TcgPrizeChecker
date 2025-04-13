@@ -12,6 +12,7 @@ struct AddEnergyCardView: View {
 	private let dataService = DataService()
 	
 	@Environment(\.modelContext) private var modelContext
+	@EnvironmentObject private var messageManager: MessageManager
 	@Environment(\.dismiss) private var dismiss
 	@State private var pressText = "Not pressed"
 	@State private var viewSelection = 0
@@ -20,11 +21,15 @@ struct AddEnergyCardView: View {
 	
 	let selectedDeck: Deck?
 	
-	@State private var isShowingMessage = false
-	@State private var messageContent = ""
 	var body: some View {
 			VStack {
-				Text("Tap on an energy card to add it to your deck.")
+				VStack {
+					Text("Tap on an energy card")
+					Text("to add a copy to your deck")
+				}
+				.fontWeight(.semibold)
+				.fontDesign(.rounded)
+				.padding(.bottom, 10)
 				ZStack {
 					LazyVGrid(columns: columns) {
 						ForEach(EnergyType.allCases.filter { $0.energyCardUIImage != nil }, id: \.rawValue) { energyCard in
@@ -42,10 +47,9 @@ struct AddEnergyCardView: View {
 										selectedDeck.cards.append(newEnergyCard)
 										modelContext.insert(newEnergyCard)
 										try? modelContext.save()
-										messageContent = "A \(energyCard.name) was added to the \(selectedDeck.name) deck."
-										Task {
-											await displayMessage()
-										}
+										messageManager.messageContent = "A \(energyCard.name) was added to the \(selectedDeck.name) deck."
+									
+										messageManager.showMessage()
 									}
 								}
 								print(energyCard.rawValue)
@@ -61,28 +65,19 @@ struct AddEnergyCardView: View {
 						}
 					}
 					.overlay {
-						MessageView(messageContent: messageContent)
-							.opacity(isShowingMessage ? 1 : 0)
+						MessageView(messageContent: messageManager.messageContent)
+							.opacity(messageManager.isShowingMessage ? 1 : 0)
 					}
 					
 				}
 				
 				
 			}
-			.padding(.horizontal, 10)
-			.padding(.vertical, 20)
-	}
-	@MainActor
-	func displayMessage() async {
-		print("Dislaying message")
-		isShowingMessage = true
-		try? await Task.sleep(nanoseconds: 1_500_000_000)
-		withAnimation {
-			isShowingMessage = false
-		}
+			.padding(10)
 	}
 }
 
 #Preview {
 	AddEnergyCardView(selectedDeck: nil)
+		.environmentObject(MessageManager())
 }

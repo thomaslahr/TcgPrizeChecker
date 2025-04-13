@@ -17,14 +17,20 @@ struct AddPlayableView: View {
 	@State private var isLongPress = false
 
 	@State private var imageCache: [String: UIImage] = [:]  // 🔹 Image cache
-	let columns = [GridItem(.adaptive(minimum: 80))]
+	let columns =  [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
 	let selectedDeck: Deck?
 	let cardsInDeck: [PersistentCard]
 	
 	var body: some View {
 		VStack {
-			Text("Tap on a card to add it to a deck, hold to delete it.")
-				.font(.callout)
+			VStack {
+				Text("Tap on a card to add it to a deck.")
+				Text("(Hold to delete it as a Playable card.")
+			}
+			.fontWeight(.semibold)
+			.fontDesign(.rounded)
+			.padding(.bottom, 10)
+				
 			ScrollView {
 				LazyVGrid(columns: columns) {
 					ForEach(playableCards, id: \.uniqueId) { card in
@@ -32,6 +38,7 @@ struct AddPlayableView: View {
 								Image(uiImage: cachedImage)
 									.resizable()
 									.aspectRatio(contentMode: .fit)
+									.frame(maxWidth: 110)
 									.onTapGesture {
 										let copiesOfCard = cardsInDeck.filter { $0.id == card.id }.count
 										
@@ -49,6 +56,7 @@ struct AddPlayableView: View {
 								Image(uiImage: uiImage)
 									.resizable()
 									.aspectRatio(contentMode: .fit)
+									.frame(maxWidth: 110)
 									.onTapGesture(perform: {
 										addCardToDeck(card)
 									})
@@ -66,7 +74,8 @@ struct AddPlayableView: View {
 			.overlay {
 				MessageView(messageContent: messageManager.messageContent)
 					.opacity(messageManager.isShowingMessage ? 1 : 0)
-					.animation(.easeInOut(duration: 0.3), value: messageManager.isShowingMessage)  // 🔹 Faster animation
+					.animation(.easeInOut(duration: 0.3), value: messageManager.isShowingMessage)
+					.shadow(radius: 5)
 			}
 		}
 		.padding(.horizontal, 10)
@@ -109,4 +118,5 @@ struct AddPlayableView: View {
 
 #Preview {
 	AddPlayableView(selectedDeck: nil, cardsInDeck: [])
+		.environmentObject(MessageManager())
 }

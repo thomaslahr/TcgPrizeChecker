@@ -17,8 +17,9 @@ struct CreateDeckSheetView: View {
 	var onDeckCreated: (Deck) -> Void
 
 	var body: some View {
+		let numberOfLetters = userInput.count
+		
 		VStack {
-			let numberOfLetters = userInput.count
 			Text("Create a new deck")
 				.font(.title)
 				.fontDesign(.rounded)
@@ -43,22 +44,29 @@ struct CreateDeckSheetView: View {
 				.padding(.horizontal, 20)
 				
 			WarningTextView(text: "Deck name is too long..", changeColor: true)
-					.opacity(userInput.count > 15 ? 1 : 0)
+				.opacity(numberOfLetters > 15 ? 1 : 0)
 					.padding(.top, 10)
 			
-			Button("Create Deck") {
+			Button {
 				let newDeck = Deck(name: userInput)
 				modelContext.insert(newDeck)
 				try? modelContext.save()
 				onDeckCreated(newDeck)
 				dismiss()
+			} label: {
+				Text("Create Deck")
+					.foregroundStyle(.white)
 			}
 			.padding()
-			.buttonStyle(.borderedProminent)
+			.background {
+				RoundedRectangle(cornerRadius: 12)
+					.foregroundStyle(numberOfLetters > 15 || userInput.isEmpty ? .gray : .blue)
+			}
+			
 			.disabled(userInput.isEmpty || userInput.count > 15)
 		}
 		.onChange(of: userInput) {
-			let newColor: Color = userInput.count > 15 ? .red : .blue
+			let newColor: Color = numberOfLetters > 15 ? .red : .blue
 			if newColor != textFieldBorderColor {
 				textFieldBorderColor = newColor
 			}

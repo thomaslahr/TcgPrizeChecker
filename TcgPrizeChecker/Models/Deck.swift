@@ -24,5 +24,9 @@ class Deck {
 }
 
 extension Deck {
-	static let sampleDeck = Deck(name: "Gardevoir ex")
+	static let sampleDeck = Deck(
+		name: "Gardevoir ex",
+		cards: PersistentCard.sampleDeck,
+		results: []
+		)
 }

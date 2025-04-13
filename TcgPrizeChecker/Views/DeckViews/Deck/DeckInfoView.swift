@@ -28,7 +28,6 @@ struct DeckInfoView: View {
 			if let selectedDeck = selectedDeck {
 				WarningTextView(text: "There are \(selectedDeck.cards.count) cards in the deck.", changeColor: selectedDeck.cards.count > 60)
 			}
-			Spacer()
 			Button {
 				activeModal = .playable
 			} label: {
@@ -38,7 +37,8 @@ struct DeckInfoView: View {
 			.padding(.horizontal)
 			.disabled(decks.isEmpty)
 		}
-		.padding([.top, .horizontal], 10)
+		.padding(.top, 10)
+		.padding([.bottom, .horizontal], 10)
     }
 }
 

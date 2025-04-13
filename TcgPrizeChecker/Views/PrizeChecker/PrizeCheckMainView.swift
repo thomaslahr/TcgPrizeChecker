@@ -11,6 +11,7 @@ import SwiftData
 struct PrizeCheckView: View {
 	@Environment(\.scenePhase) private var scenePhase
 	@EnvironmentObject var deckSelectionViewModel: DeckSelectionViewModel
+	@ObservedObject var imageCache: ImageCacheViewModel
 	@Query var decks: [Deck]
 	
 	
@@ -94,7 +95,8 @@ struct PrizeCheckView: View {
 							}
 							
 						if deckState.cardsInHand.isEmpty && uiState.showResultsPopover == false {
-								PrizeCheckDeckGridView(selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "")
+								PrizeCheckDeckGridView(selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "",
+													   imageCache: imageCache)
 									.opacity(timer.isRunning ? 0 : 1)
 							}
 									
@@ -244,6 +246,7 @@ struct PrizeCheckView: View {
 				Text("The timer automatically stops after 10 minutes.")
 			}
 			
+			
 		}
 	}
 	
@@ -310,7 +313,7 @@ struct PrizeCheckView: View {
 #Preview {
 	
 	NavigationStack{
-		PrizeCheckView()
+		PrizeCheckView(imageCache: ImageCacheViewModel())
 			.environmentObject(DeckSelectionViewModel())
 	}
 }
@@ -351,3 +354,5 @@ private struct UIState {
 	var tappedHand = false
 	var isViewTapped = false
 }
+
+
