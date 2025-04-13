@@ -9,12 +9,10 @@
 /* Begin PBXBuildFile section */
 		E9B875392D1576380086549E /* Algorithms in Frameworks */ = {isa = PBXBuildFile; productRef = E9B875382D1576380086549E /* Algorithms */; };
 		E9B8753C2D1576620086549E /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = E9B8753B2D1576620086549E /* AsyncAlgorithms */; };
-		E9CCCB252DA9057700078204 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = E9CCCB242DA9057700078204 /* LaunchScreen.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		E9BB190E2CCEAEBE008BF244 /* TcgPrizeChecker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TcgPrizeChecker.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		E9CCCB242DA9057700078204 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -54,7 +52,6 @@
 		E9BB19052CCEAEBE008BF244 = {
 			isa = PBXGroup;
 			children = (
-				E9CCCB242DA9057700078204 /* LaunchScreen.storyboard */,
 				E9BB19102CCEAEBE008BF244 /* TcgPrizeChecker */,
 				E9BB190F2CCEAEBE008BF244 /* Products */,
 			);
@@ -138,7 +135,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E9CCCB252DA9057700078204 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -288,8 +284,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TcgPrizeChecker/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -318,8 +315,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TcgPrizeChecker/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen.storyboard;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
