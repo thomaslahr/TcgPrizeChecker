@@ -37,9 +37,16 @@ struct MainAppView: View {
 	//Can be removed if not deployed for iOS17 and below
 	
 	@StateObject private var imageCache = ImageCacheViewModel()
+	@StateObject var deckViewModel: DeckViewModel
+	
+	init() {
+			let cache = ImageCacheViewModel()
+			_imageCache = StateObject(wrappedValue: cache)
+			_deckViewModel = StateObject(wrappedValue: DeckViewModel(imageCache: cache))
+		}
 	var body: some View {
 		TabView {
-			MainDeckView(imageCache: imageCache)
+			MainDeckView(imageCache: imageCache, deckViewModel: deckViewModel)
 			//Can be removed if not deployed for iOS17 and below
 				//.environmentObject(deckSelectionViewModel)
 				.tabItem {

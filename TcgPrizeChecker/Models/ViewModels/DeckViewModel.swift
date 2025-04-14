@@ -17,6 +17,8 @@ class DeckViewModel: ObservableObject {
 	init(imageCache: ImageCacheViewModel) {
 		self.imageCache = imageCache
 	}
+	
+	@MainActor
 	func preloadImages(for deck: Deck) async {
 		for card in deck.cards {
 			// Skip if already cached

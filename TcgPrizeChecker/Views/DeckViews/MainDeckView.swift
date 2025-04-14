@@ -12,9 +12,11 @@ import AsyncAlgorithms
 struct MainDeckView: View {
 	@Environment(\.modelContext) var modelContext
 	@EnvironmentObject var deckSelectionViewModel: DeckSelectionViewModel
-	@StateObject var searchViewModel = SearchViewModel()
+	@StateObject var searchViewModel = SearchViewModel(allCards: [])
 	@StateObject var allCardsViewModel = AllCardsViewModel()
 	@ObservedObject var imageCache: ImageCacheViewModel
+	
+	@ObservedObject var deckViewModel: DeckViewModel
 	
 	@Query var deck: [PersistentCard]
 	@Query var decks: [Deck]
@@ -32,12 +34,6 @@ struct MainDeckView: View {
 	
 	@State private var showProgressView = false
 	
-	@StateObject var deckViewModel: DeckViewModel
-	
-	init(imageCache: ImageCacheViewModel) {
-			_imageCache = ObservedObject(wrappedValue: imageCache)
-			_deckViewModel = StateObject(wrappedValue: DeckViewModel(imageCache: imageCache))
-		}
 	
 	var body: some View {
 		NavigationStack {
@@ -63,9 +59,12 @@ struct MainDeckView: View {
 							}
 						
 					}
-					.onChange(of: searchViewModel.searchText) { oldValue, newValue in
-						searchViewModel.debounceSearch(query: newValue, allCards: allCardsViewModel.cards)
-						//handleSearch(newValue)
+//					.onChange(of: searchViewModel.searchText) { oldValue, newValue in
+//						searchViewModel.debounceSearch(query: newValue, allCards: allCardsViewModel.cards)
+//						//handleSearch(newValue)
+//					}
+					.onChange(of: allCardsViewModel.cards) { _, newCards in
+						searchViewModel.updateAllCards(newCards)
 					}
 					.overlay(alignment: .trailing) {
 						if !searchViewModel.searchText.isEmpty {
@@ -126,30 +125,14 @@ struct MainDeckView: View {
 						DeckListView(selectedDeckID: deckSelectionViewModel.selectedDeckID)
 					default:
 						if deckViewModel.isLoadingDeck {
-							if let newDeck = selectedDeck, deckViewModel.isDeckCached(newDeck) {
-									Color.black
-										.frame(maxWidth: .infinity, maxHeight: .infinity)
-								} else {
-									ProgressView("Loading deck...")
-										.frame(maxWidth: .infinity, maxHeight: .infinity)
-								}
-						} else if deckViewModel.lastRenderedDeckID != nil {
-								ZStack {
-									if deckViewModel.isLoadingDeck {
-										if let newDeck = selectedDeck, deckViewModel.isDeckCached(newDeck) {
-											Color.black
-												.frame(maxWidth: .infinity, maxHeight: .infinity)
-										} else {
-											ProgressView("Loading deck...")
-												.frame(maxWidth: .infinity, maxHeight: .infinity)
-										}
-									} else if let id = deckViewModel.lastRenderedDeckID {
-										DeckGridView(imageCache: imageCache, selectedDeckID: id)
-											.transition(.opacity)
-											.animation(.easeInOut(duration: 0.35), value: id)
-									}
-								}
+							LoadingDeckView(selectedDeck: selectedDeck, deckViewModel: deckViewModel)
+						} else if let id = deckViewModel.lastRenderedDeckID {
+							ZStack {
+								DeckGridView(imageCache: imageCache, selectedDeckID: id)
 							}
+			  .transition(.opacity)
+			  .animation(.easeInOut(duration: 0.35), value: id)
+	  }
 					}
 				} else {
 					// deckName er kun for debugging, det trengs ikke for logikken som implementerer decks.
@@ -166,15 +149,15 @@ struct MainDeckView: View {
 			}
 			.onChange(of: deckSelectionViewModel.selectedDeckID) { _, newID in
 				guard let newDeck = decks.first(where: { $0.id == newID }) else { return }
-
+				
 				deckViewModel.isLoadingDeck = true
 				Task {
 					await deckViewModel.preloadImages(for: newDeck)
-
+					
 					await MainActor.run {
 						deckViewModel.readyDeckID = newID
 						deckViewModel.lastRenderedDeckID = newID
-
+						
 						// Add a delay ONLY if the images were cached
 						if deckViewModel.isDeckCached(newDeck) {
 							DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
@@ -187,7 +170,7 @@ struct MainDeckView: View {
 				}
 				imageCache.revealedCardIDs.removeAll()
 			}
-
+			
 			.overlay {
 				MessageView(messageContent: "You can only have 10 decks.")
 					.opacity(uiState.isShowingMessage ? 1 : 0)
@@ -238,7 +221,7 @@ extension Binding where Value == String? {
 }
 
 #Preview {
-	MainDeckView(imageCache: ImageCacheViewModel())
+	MainDeckView(imageCache: ImageCacheViewModel(), deckViewModel: DeckViewModel(imageCache: ImageCacheViewModel()))
 		.environmentObject(DeckSelectionViewModel())
 }
 

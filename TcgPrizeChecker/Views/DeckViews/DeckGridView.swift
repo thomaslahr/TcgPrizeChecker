@@ -58,20 +58,20 @@ struct DeckGridView: View {
 											}
 									} else if let image = UIImage(data: card.imageData) {
 										let targetSize = CGSize(width: 140, height: 200)
-		  if let downscaled = image.downscaled(to: targetSize) {
-			  Image(uiImage: downscaled)
-				  .resizable()
-				  .aspectRatio(contentMode: .fit)
-				  .frame(maxWidth: 70)
-				  .opacity(isRevealed ? 1 : 0)
-				  .onAppear {
-					  if !isRevealed {
-						  imageCache.revealCard(card)
-					  }
-					  imageCache.setImage(downscaled, for: card.uniqueId)
-				  }
-		  }
-	  }
+										if let downscaled = image.downscaled(to: targetSize) {
+											Image(uiImage: downscaled)
+												.resizable()
+												.aspectRatio(contentMode: .fit)
+												.frame(maxWidth: 70)
+												.opacity(isRevealed ? 1 : 0)
+												.onAppear {
+													if !isRevealed {
+														imageCache.revealCard(card)
+													}
+													imageCache.setImage(downscaled, for: card.uniqueId)
+												}
+										}
+									}
 								}
 							}
 						}
