@@ -33,30 +33,38 @@ struct PrizeCheckDeckGridView: View {
 					LazyVGrid(columns: columns) {
 						if let selectedDeck = decks.first(where: {$0.id == selectedDeckID}) {
 							ForEach(selectedDeck.cards, id: \.uniqueId) { card in
-								if let cachedImage = imageCache.cache[card.uniqueId] {
-									Image(uiImage: cachedImage)
-										.resizable()
-										.aspectRatio(contentMode: .fit)
-										.frame(maxWidth: 70)
-										.onAppear {
-											print("Loading cached images")
-										}
-									
-								}  else if let image = UIImage(data: card.imageData) {
-									let targetSize = CGSize(width: 140, height: 200)
-									if let downscaled = image.downscaled(to: targetSize) {
-										Image(uiImage: downscaled)
+								let isRevealed = imageCache.revealedCardIDs.contains(card.uniqueId)
+								
+								Group {
+									if let cachedImage = imageCache.cache[card.uniqueId] {
+										Image(uiImage: cachedImage)
 											.resizable()
 											.aspectRatio(contentMode: .fit)
-											.frame(maxWidth: 70)
+											.frame(maxWidth: 75)
+											.opacity(isRevealed ? 1 : 0)
 											.onAppear {
-												print("Loading and caching downscaled image")
-												imageCache.cache[card.uniqueId] = downscaled
+												if !isRevealed {
+													imageCache.revealCard(card)
+												}
 											}
+									} else if let image = UIImage(data: card.imageData) {
+										let targetSize = CGSize(width: 140, height: 200)
+										if let downscaled = image.downscaled(to: targetSize) {
+											Image(uiImage: downscaled)
+												.resizable()
+												.aspectRatio(contentMode: .fit)
+												.frame(maxWidth: 70)
+												.opacity(isRevealed ? 1 : 0)
+												.onAppear {
+													if !isRevealed {
+														imageCache.revealCard(card)
+													}
+													imageCache.setImage(downscaled, for: card.uniqueId)
+												}
+										}
 									}
 								}
 							}
-							.shadow(radius: 5)
 						}
 					}
 				}

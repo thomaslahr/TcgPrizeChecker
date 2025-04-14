@@ -42,6 +42,8 @@ struct PrizeCheckView: View {
 		decks.first(where: { $0.id == deckSelectionViewModel.selectedDeckID})
 	}
 	
+	@ObservedObject var deckViewModel: DeckViewModel
+	
 	var body: some View {
 		NavigationStack {
 			ZStack {
@@ -71,40 +73,43 @@ struct PrizeCheckView: View {
 						}
 						
 						//"Hoveddelen av viewet hvor de tre radene med kort er.
-							if !deckState.cardsInHand.isEmpty {
-				
-									DeckAndHandView(
-										deckSpacing: $deckSpacing,
-										handSpacing: $handSpacing,
-										tappedDeck: $uiState.tappedDeck,
-										tappedHand: $uiState.tappedHand,
-										isViewTapped: $uiState.isViewTapped,
-										deck: deckState,
-										isRightCardOnTop: uiState.isRightCardOnTop
-									)
-								
-								
-								//Gjett hvilke kort som er prize cards.
-								GuessPrizeCardsView(
-									userGuesses: $userGuesses,
-									guessResult: $guessResult,
-									isTimerRunning: timer.isRunning
-								)
-								.opacity(uiState.tappedDeck || uiState.tappedHand ? 0 : 1)
-								.padding()
-							}
+						if !deckState.cardsInHand.isEmpty {
 							
-						if deckState.cardsInHand.isEmpty && uiState.showResultsPopover == false {
-								PrizeCheckDeckGridView(selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "",
-													   imageCache: imageCache)
-									.opacity(timer.isRunning ? 0 : 1)
-							}
-									
-								
+							DeckAndHandView(
+								deckSpacing: $deckSpacing,
+								handSpacing: $handSpacing,
+								tappedDeck: $uiState.tappedDeck,
+								tappedHand: $uiState.tappedHand,
+								isViewTapped: $uiState.isViewTapped,
+								deck: deckState,
+								isRightCardOnTop: uiState.isRightCardOnTop
+							)
 							
+							
+							//Gjett hvilke kort som er prize cards.
+							GuessPrizeCardsView(
+								userGuesses: $userGuesses,
+								guessResult: $guessResult,
+								isTimerRunning: timer.isRunning
+							)
+							.opacity(uiState.tappedDeck || uiState.tappedHand ? 0 : 1)
+							.padding()
+						}
 						
-						
-						
+						if deckState.cardsInHand.isEmpty && !uiState.showResultsPopover {
+							ZStack {
+								if deckViewModel.isLoadingDeck {
+									LoadingDeckView(selectedDeck: selectedDeck, deckViewModel: deckViewModel)
+								} else if let id = deckViewModel.lastRenderedDeckID {
+									PrizeCheckDeckGridView(selectedDeckID: id, imageCache: imageCache)
+										.transition(.opacity)
+								}
+							}
+							.id(deckViewModel.lastRenderedDeckID) // Force fresh render on deck switch
+							.animation(.easeInOut(duration: 0.35), value: deckViewModel.lastRenderedDeckID)
+							.opacity(timer.isRunning ? 0 : 1)
+						}
+			
 						if let selectedDeck = selectedDeck {
 							if selectedDeck.cards.count < 14 {
 								Text("There isn't enough cards in the deck yet to prize check.")
@@ -140,6 +145,29 @@ struct PrizeCheckView: View {
 							//timer.string = "0.00"
 							print("App moved to background or became inactive — timer stopped and reset.")
 						}
+					}
+					.onChange(of: deckSelectionViewModel.selectedDeckID) { _, newID in
+						guard let newDeck = decks.first(where: { $0.id == newID }) else { return }
+						
+						deckViewModel.isLoadingDeck = true
+						Task {
+							await deckViewModel.preloadImages(for: newDeck)
+							
+							await MainActor.run {
+								deckViewModel.readyDeckID = newID
+								deckViewModel.lastRenderedDeckID = newID
+								
+								// Add a delay ONLY if the images were cached
+								if deckViewModel.isDeckCached(newDeck) {
+									DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+										deckViewModel.isLoadingDeck = false
+									}
+								} else {
+									deckViewModel.isLoadingDeck = false
+								}
+							}
+						}
+						imageCache.revealedCardIDs.removeAll()
 					}
 					.onDisappear {
 						fullViewReset()
@@ -313,7 +341,7 @@ struct PrizeCheckView: View {
 #Preview {
 	
 	NavigationStack{
-		PrizeCheckView(imageCache: ImageCacheViewModel())
+		PrizeCheckView(imageCache: ImageCacheViewModel(), deckViewModel: DeckViewModel(imageCache: ImageCacheViewModel()))
 			.environmentObject(DeckSelectionViewModel())
 	}
 }

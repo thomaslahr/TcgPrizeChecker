@@ -53,7 +53,7 @@ struct MainAppView: View {
 					Label("Deck", systemImage: "rectangle.on.rectangle.square.fill")
 				}
 
-			PrizeCheckView(imageCache: imageCache)
+			PrizeCheckView(imageCache: imageCache, deckViewModel: deckViewModel)
 			//	.environmentObject(deckSelectionViewModel)
 				.tabItem {
 					Label("Prize Checker", systemImage: "gift.circle")
