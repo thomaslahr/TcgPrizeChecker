@@ -1,0 +1,72 @@
+//
+//  PrizeCheckViewModel.swift
+//  TcgPrizeChecker
+//
+//  Created by Thomas Lahr on 14/04/2025.
+//
+
+import Foundation
+
+class PrizeCheckViewModel: ObservableObject {
+	@Published var deckState = DeckState()
+	@Published var userGuesses: [String] = Array(repeating: "", count: 6)
+	@Published var guessResult: [Answer] = Array(repeating: .guess, count: 6)
+	
+	func shuffleDeck(deck: Deck?) {
+		guard let cards = deck?.cards else {
+			print("No deck avaliable to shuffle.")
+			return
+		}
+		let shuffledDeck = cards.shuffled()
+		
+		guard shuffledDeck.count >= 13 else {
+			print("Not enough cards in the deck for prizes and and hand.")
+			return
+		}
+		deckState.cardsInHand = Array(shuffledDeck.prefix(7))
+		deckState.remainingCardsInDeck = Array(shuffledDeck.dropFirst(13))
+		deckState.prizeCards = Array(shuffledDeck[7...12])
+	}
+	
+	func resetDeck() {
+		userGuesses = Array(repeating: "", count: 6)
+		guessResult = Array(repeating: .guess, count: 6)
+		//	showPrizeCards = false
+	}
+	
+	func checkUserGuesses() {
+		
+		var unmatchedPrizeCards = deckState.prizeCards
+		
+		for (index, userGuess) in userGuesses.enumerated() {
+			let cleanedGuess = userGuess.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+			
+			guard !cleanedGuess.isEmpty else {
+				guessResult[index] = .wrong
+				continue
+			}
+			
+			guard cleanedGuess.count > 2 else {
+				guessResult[index] = .wrong
+				continue
+			}
+			
+			if let matchIndex = unmatchedPrizeCards.firstIndex(where: { $0.name.lowercased().contains(cleanedGuess)
+			}) {
+				guessResult[index] = .correct
+				unmatchedPrizeCards.remove(at: matchIndex)
+			} else {
+				guessResult[index] = .wrong
+			}
+		}
+	}
+	
+	func fullViewReset() {
+		deckState.remainingCardsInDeck.removeAll()
+		deckState.cardsInHand.removeAll()
+		//prizeCards.removeAll()
+		//elapsedTime = 0.0
+		//timer.string = "0.00"
+	}
+}
+

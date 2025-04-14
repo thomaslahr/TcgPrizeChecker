@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct PrizeCheckerHeaderView: View {
-	@Binding var timer: TimerState
+	@ObservedObject var timerViewModel: TimerViewModel
 	@Binding var rotationAngle: Int
 	@Binding var activeModal: PrizeModal?
 	let hideTimer: Bool
 	
-    var body: some View {
+	var body: some View {
 		HStack {
 			ZStack {
 				Button {
@@ -23,17 +23,12 @@ struct PrizeCheckerHeaderView: View {
 					Image(systemName: "list.clipboard")
 						.font(.system(size: 30))
 				}
-				.disabled(timer.isRunning)
+				.disabled(timerViewModel.isRunning)
 				.padding(.leading, 20)
 				.frame(maxWidth: .infinity, alignment: .leading)
 				
 				
-				TimerView(
-					timerString: $timer.string,
-					isTimerRunning: $timer.isRunning,
-					elapsedTime: $timer.elapsed,
-					didTimerRunFor10min: $timer.ranFor10Min
-				)
+				TimerView(timerViewModel: timerViewModel)
 					.opacity(hideTimer ? 0 : 1)
 					.animation(.linear(duration: 0.2), value: hideTimer)
 					.frame(maxWidth: .infinity, alignment: .center)
@@ -51,15 +46,15 @@ struct PrizeCheckerHeaderView: View {
 						.font(.system(size: 30))
 						.rotationEffect(.degrees(Double(rotationAngle)))
 				}
-				.disabled(timer.isRunning)
+				.disabled(timerViewModel.isRunning)
 				.padding(.trailing, 20)
 				.frame(maxWidth: .infinity, alignment: .trailing)
 			}
 		}
 		.frame(maxWidth: .infinity)
-    }
+	}
 }
 
 #Preview {
-	PrizeCheckerHeaderView(timer: .constant(TimerState()), rotationAngle: .constant(0), activeModal: .constant(.none), hideTimer: false)
+	PrizeCheckerHeaderView(timerViewModel: TimerViewModel(), rotationAngle: .constant(0), activeModal: .constant(.none), hideTimer: false)
 }

@@ -14,12 +14,7 @@ struct PrizeCheckView: View {
 	@ObservedObject var imageCache: ImageCacheViewModel
 	@Query var decks: [Deck]
 	
-	
-	//Trigger tre av knappenes state.
-	//@State private var showPrizeCards = false
-	
-	@State private var userGuesses: [String] = Array(repeating: "", count: 6)
-	@State private var guessResult: [Answer] = Array(repeating: .guess, count: 6)
+	@StateObject private var prizeCheckViewModel = PrizeCheckViewModel()
 	
 	//Booleans for å vise sub views:
 	
@@ -27,11 +22,7 @@ struct PrizeCheckView: View {
 	@State private var rotationAngle = 0
 	
 	//Variables knyttet opp til TimerView
-	@State private var timer = TimerState()
-	
-	@State private var deckState = DeckState()
-	
-	
+	@StateObject var timerViewModel = TimerViewModel()
 	@State private var deckSpacing: CGFloat = -72.0
 	@State private var handSpacing: CGFloat = -72.0
 	
@@ -55,7 +46,7 @@ struct PrizeCheckView: View {
 				}
 				VStack {
 					PrizeCheckerHeaderView(
-						timer: $timer,
+						timerViewModel: timerViewModel,
 						rotationAngle: $rotationAngle,
 						activeModal: $activeModal,
 						hideTimer: uiState.hideTimer
@@ -68,12 +59,12 @@ struct PrizeCheckView: View {
 									.fontWeight(.semibold)
 									.fontDesign(.rounded)
 								CustomPickerMenuView(decks: decks)
-									.disabled(timer.isRunning && !deckState.cardsInHand.isEmpty)
+									.disabled(timerViewModel.isRunning && !prizeCheckViewModel.deckState.cardsInHand.isEmpty)
 							}
 						}
 						
 						//"Hoveddelen av viewet hvor de tre radene med kort er.
-						if !deckState.cardsInHand.isEmpty {
+						if !prizeCheckViewModel.deckState.cardsInHand.isEmpty {
 							
 							DeckAndHandView(
 								deckSpacing: $deckSpacing,
@@ -81,22 +72,22 @@ struct PrizeCheckView: View {
 								tappedDeck: $uiState.tappedDeck,
 								tappedHand: $uiState.tappedHand,
 								isViewTapped: $uiState.isViewTapped,
-								deck: deckState,
+								deck: prizeCheckViewModel.deckState,
 								isRightCardOnTop: uiState.isRightCardOnTop
 							)
 							
 							
 							//Gjett hvilke kort som er prize cards.
 							GuessPrizeCardsView(
-								userGuesses: $userGuesses,
-								guessResult: $guessResult,
-								isTimerRunning: timer.isRunning
+								userGuesses: $prizeCheckViewModel.userGuesses,
+								guessResult: $prizeCheckViewModel.guessResult,
+								isTimerRunning: timerViewModel.isRunning
 							)
 							.opacity(uiState.tappedDeck || uiState.tappedHand ? 0 : 1)
 							.padding()
 						}
 						
-						if deckState.cardsInHand.isEmpty && !uiState.showResultsPopover {
+						if prizeCheckViewModel.deckState.cardsInHand.isEmpty && !uiState.showResultsPopover {
 							ZStack {
 								if deckViewModel.isLoadingDeck {
 									LoadingDeckView(selectedDeck: selectedDeck, deckViewModel: deckViewModel)
@@ -107,7 +98,7 @@ struct PrizeCheckView: View {
 							}
 							.id(deckViewModel.lastRenderedDeckID) // Force fresh render on deck switch
 							.animation(.easeInOut(duration: 0.35), value: deckViewModel.lastRenderedDeckID)
-							.opacity(timer.isRunning ? 0 : 1)
+							.opacity(timerViewModel.isRunning ? 0 : 1)
 						}
 			
 						if let selectedDeck = selectedDeck {
@@ -120,28 +111,27 @@ struct PrizeCheckView: View {
 					//Hvis brukeren endrer deck i f.eks MainDeckView, så nullstilles dette viewet, så det ikke vises noen kort. 17.12.24
 					
 					.onChange(of: deckSelectionViewModel.selectedDeckID) { oldValue, newValue in
-						if !deckState.cardsInHand.isEmpty {
+						if !prizeCheckViewModel.deckState.cardsInHand.isEmpty {
 							withAnimation {
-								fullViewReset()
+								prizeCheckViewModel.fullViewReset()
 							}
 							print("The Cards in the Prize Checker was removed.")
 						}
 					}
 					//Hvis bruker legger til eller sletter kort fra decket, så nullstilles også viewet. Mulig denne logikken kan slås sammen med den over?. 17.12.24
 					.onChange(of: selectedDeck?.cards.count) { oldValue, newValue in
-						if !deckState.cardsInHand.isEmpty {
+						if !prizeCheckViewModel.deckState.cardsInHand.isEmpty {
 							withAnimation {
-								fullViewReset()
+								prizeCheckViewModel.fullViewReset()
 								
 							}
 							print("The Prize Checker was reset.")
 						}
 					}
 					.onChange(of: scenePhase) { oldPhase, newPhase in
-						if newPhase != .active && timer.isRunning {
+						if newPhase != .active && timerViewModel.isRunning {
 							// App is no longer active → reset everything
-							timer.isRunning = false
-							timer.elapsed = 0
+							timerViewModel.stopAndReset()
 							//timer.string = "0.00"
 							print("App moved to background or became inactive — timer stopped and reset.")
 						}
@@ -170,9 +160,9 @@ struct PrizeCheckView: View {
 						imageCache.revealedCardIDs.removeAll()
 					}
 					.onDisappear {
-						fullViewReset()
+						prizeCheckViewModel.fullViewReset()
 						
-						timer.isRunning = false
+						timerViewModel.isRunning = false
 						//timer.string = "0.00"
 					}
 					
@@ -184,35 +174,35 @@ struct PrizeCheckView: View {
 						HStack {
 							ZStack {
 								Button {
-									timer.isRunning = false
-									fullViewReset()
+									timerViewModel.isRunning = false
+									prizeCheckViewModel.fullViewReset()
 								} label: {
 									Image(systemName: "x.circle")
 										.font(.title)
 										.fontWeight(.bold)
 										.tint(.red)
-										.animation(.linear(duration: 0.2), value: timer.isRunning)
+										.animation(.linear(duration: 0.2), value: timerViewModel.isRunning)
 								}
-								.disabled(!timer.isRunning)
+								.disabled(!timerViewModel.isRunning)
 								.padding(.leading, 20)
 								.frame(maxWidth: .infinity, alignment: .leading)
 								
 								Button {
-									if timer.isRunning {
+									if timerViewModel.isRunning {
 										//Submit
-										checkUserGuesses()
+										prizeCheckViewModel.checkUserGuesses()
 										//	showPrizeCards = true
-										timer.isRunning = false
+										timerViewModel.isRunning = false
 										uiState.showResultsPopover = true
 									} else {
 										//Shuffle
-										shuffleDeck()
-										resetDeck()
-										timer.isRunning = true
+										prizeCheckViewModel.shuffleDeck(deck: selectedDeck)
+										prizeCheckViewModel.resetDeck()
+										timerViewModel.isRunning = true
 									}
 									
 								} label: {
-									Text(timer.isRunning ? "Submit" : "Shuffle Deck")
+									Text(timerViewModel.isRunning ? "Submit" : "Shuffle Deck")
 								}
 								.buttonStyle(.borderedProminent)
 								.frame(maxWidth: .infinity, alignment: .center)
@@ -227,14 +217,13 @@ struct PrizeCheckView: View {
 									Image(systemName: "info.circle")
 										.font(.title)
 								}
-								.disabled(timer.isRunning)
+								.disabled(timerViewModel.isRunning)
 								.padding(.trailing, 20)
 								.frame(maxWidth: .infinity, alignment: .trailing)
 							}
 						}
 					}
 					.frame(maxWidth: .infinity)
-					
 					.sheet(item: $activeModal) { modal in
 						switch modal {
 						case .info:
@@ -253,96 +242,40 @@ struct PrizeCheckView: View {
 					}
 					.popover(isPresented: $uiState.showResultsPopover) {
 						PopoverViewPrize(
-							deckState: deckState,
-							userGuesses: userGuesses,
-							guessResult: guessResult,
+							deckState: prizeCheckViewModel.deckState,
+							prizeCheckViewModel: prizeCheckViewModel,
 							selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "",
-							elapsedTime: $timer.elapsed, timerState: $timer)
+							timerViewModel: timerViewModel)
 						.interactiveDismissDisabled()
 						.onAppear() {
-							fullViewReset()
+							prizeCheckViewModel.fullViewReset()
 						}
-						
 					}
 				}
 			}
 			.navigationTitle("Prize Check")
 			.navigationBarTitleDisplayMode(.inline)
-			.alert("Timer stopped", isPresented: $timer.ranFor10Min) {
-				Button("OK", role: .cancel) { timer.ranFor10Min = false }
+			.alert("Timer stopped", isPresented: $timerViewModel.didTimerRunFor10min) {
+				Button("OK", role: .cancel) { timerViewModel.didTimerRunFor10min = false }
 			} message: {
 				Text("The timer automatically stops after 10 minutes.")
 			}
-			
-			
 		}
-	}
-	
-	private func shuffleDeck() {
-		guard let cards = selectedDeck?.cards else {
-			print("No deck avaliable to shuffle.")
-			return
-		}
-		let shuffledDeck = cards.shuffled()
-		
-		guard shuffledDeck.count >= 13 else {
-			print("Not enough cards in the deck for prizes and and hand.")
-			return
-		}
-		deckState.cardsInHand = Array(shuffledDeck.prefix(7))
-		deckState.remainingCardsInDeck = Array(shuffledDeck.dropFirst(13))
-		deckState.prizeCards = Array(shuffledDeck[7...12])
-	}
-	
-	private func resetDeck() {
-		userGuesses = Array(repeating: "", count: 6)
-		guessResult = Array(repeating: .guess, count: 6)
-		//	showPrizeCards = false
-	}
-	
-	private func checkUserGuesses() {
-		
-		var unmatchedPrizeCards = deckState.prizeCards
-		
-		for (index, userGuess) in userGuesses.enumerated() {
-			let cleanedGuess = userGuess.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-			
-			guard !cleanedGuess.isEmpty else {
-				guessResult[index] = .wrong
-				continue
-			}
-			
-			guard cleanedGuess.count > 2 else {
-				guessResult[index] = .wrong
-				continue
-			}
-			
-			if let matchIndex = unmatchedPrizeCards.firstIndex(where: { $0.name.lowercased().contains(cleanedGuess)
-			}) {
-				guessResult[index] = .correct
-				unmatchedPrizeCards.remove(at: matchIndex)
-			} else {
-				guessResult[index] = .wrong
-			}
-		}
-		
-		
-	}
-	
-	private func fullViewReset() {
-		deckState.remainingCardsInDeck.removeAll()
-		deckState.cardsInHand.removeAll()
-		//prizeCards.removeAll()
-		//elapsedTime = 0.0
-		//timer.string = "0.00"
 	}
 }
 
 #Preview {
 	
 	NavigationStack{
-		PrizeCheckView(imageCache: ImageCacheViewModel(), deckViewModel: DeckViewModel(imageCache: ImageCacheViewModel()))
-			.environmentObject(DeckSelectionViewModel())
+		PrizeCheckView(
+			imageCache: ImageCacheViewModel(),
+			deckViewModel: DeckViewModel(
+				imageCache: ImageCacheViewModel()
+			)
+		)
+		.environmentObject(
+			DeckSelectionViewModel()
+		)
 	}
 }
 
@@ -382,5 +315,4 @@ private struct UIState {
 	var tappedHand = false
 	var isViewTapped = false
 }
-
 

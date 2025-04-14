@@ -7,9 +7,15 @@
 
 import Foundation
 
-struct TimerState {
-	var isRunning: Bool = false
-	var elapsed: TimeInterval = 0.0
-	var string: String = "0.00"
-	var ranFor10Min: Bool = false
+class TimerViewModel: ObservableObject {
+	@Published var isRunning: Bool = false
+	@Published var elapsed: TimeInterval = 0.0
+	@Published var string: String = "0.00"
+	@Published var ranFor10Min: Bool = false
+	@Published var didTimerRunFor10min: Bool = false
+	
+	func stopAndReset() {
+		isRunning = false
+		elapsed = 0.0
+	}
 }

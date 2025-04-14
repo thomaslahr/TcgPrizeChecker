@@ -12,51 +12,49 @@ struct TimerView: View {
 	@State private var startTime = Date()
 	@State private var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 	
-	@Binding var timerString: String
-	@Binding var isTimerRunning: Bool
-	@Binding var elapsedTime: TimeInterval
-	@Binding var didTimerRunFor10min: Bool
+	
+	@ObservedObject var timerViewModel: TimerViewModel
 	var body: some View {
 		
 		VStack{
-			Text(timerString)
+			Text(timerViewModel.string)
 				.font(.system(size: 30))
 				.fontDesign(.rounded)
 				.fontWeight(.bold)
 				.onReceive(timer) { _ in
-					if isTimerRunning {
+					if timerViewModel.isRunning {
 						
-						elapsedTime = Date().timeIntervalSince(startTime)
+						timerViewModel.elapsed = Date().timeIntervalSince(startTime)
 						
-						if elapsedTime >= 600 {
-							isTimerRunning = false
-							elapsedTime = 0
-							timerString = "0.00"
-							didTimerRunFor10min = true
+						if timerViewModel.elapsed >= 600 {
+							timerViewModel.isRunning = false
+							timerViewModel.elapsed = 0
+							timerViewModel.string = "0.00"
+							timerViewModel.didTimerRunFor10min = true
 						} else {
-							let minutes = Int(elapsedTime / 60)
-							let seconds = elapsedTime.truncatingRemainder(dividingBy: 60)
-							timerString = String(format: "%d.%02.0f", minutes, seconds)
+							let minutes = Int(timerViewModel.elapsed / 60)
+							let seconds = timerViewModel.elapsed.truncatingRemainder(dividingBy: 60)
+							timerViewModel.string = String(format: "%d.%02.0f", minutes, seconds)
 						}
 						
 					}
 				}
 				.onAppear {
-					if isTimerRunning {
-						timerString = "0.00"
+					if timerViewModel.isRunning {
+						timerViewModel.string = "0.00"
 						startTime = Date()
 					}
 				}
 		}
-		.onChange(of: isTimerRunning) {
+		.onChange(of: timerViewModel.isRunning) {
 			startTime = Date()
 		}
-		.onChange(of: timerString) { oldValue, newValue in
+		.onChange(of: timerViewModel.string) { oldValue, newValue in
 			print("Timer fired")
 		}
 	}
 }
 
 #Preview {
-	TimerView(timerString: .constant("0.00"), isTimerRunning: .constant(false), elapsedTime: .constant(0.0), didTimerRunFor10min: .constant(false))
+	TimerView(timerViewModel: TimerViewModel())
 }
