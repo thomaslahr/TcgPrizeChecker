@@ -19,6 +19,8 @@ class PersistentCard {
 	var name: String
 	var uniqueId: String
 	
+	var dateAdded = Date()
+	
 	init(
 		imageData: Data,
 		id: String,

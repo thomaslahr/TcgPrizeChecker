@@ -11,6 +11,7 @@ class DeckViewModel: ObservableObject {
 	@Published var isLoadingDeck = false
 	@Published var readyDeckID: String? = nil
 	@Published var lastRenderedDeckID: String?
+	@Published var cardSortOrder = CardSortOrder.dateAdded
 	
 	private var imageCache: ImageCacheViewModel
 	
@@ -44,4 +45,14 @@ class DeckViewModel: ObservableObject {
 	func isDeckCached(_ deck: Deck) -> Bool {
 		deck.cards.allSatisfy { imageCache.cache[$0.uniqueId] != nil }
 	}
+	
+	func sortedCards(for deck: Deck) -> [PersistentCard] {
+		switch cardSortOrder {
+		case .dateAdded:
+			return deck.cards.sorted { $0.dateAdded < $1.dateAdded }
+		case .alphabetical:
+			return deck.cards.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+		}
+	}
+	
 }

@@ -5,11 +5,14 @@
 //  Created by Thomas Lahr on 09/04/2025.
 //
 
+
+
 import SwiftUI
 import SwiftData
 
 struct PrizeCheckDeckGridView: View {
 	@Environment(\.modelContext) private var modelContext
+	@ObservedObject var deckViewModel: DeckViewModel
 	@State private var cardOffset: CGFloat = 0
 	@State private var isDragging = false
 	@State private var cardOpacity: Double = 1.0
@@ -30,7 +33,8 @@ struct PrizeCheckDeckGridView: View {
 				ZStack {
 					LazyVGrid(columns: columns) {
 						if let selectedDeck = decks.first(where: {$0.id == selectedDeckID}) {
-							ForEach(selectedDeck.cards, id: \.uniqueId) { card in
+							let sortedCards = deckViewModel.sortedCards(for: selectedDeck)
+							ForEach(sortedCards, id: \.uniqueId) { card in
 								let isRevealed = imageCache.revealedCardIDs.contains(card.uniqueId)
 								
 								Group {
@@ -42,7 +46,7 @@ struct PrizeCheckDeckGridView: View {
 											.opacity(isRevealed ? 1 : 0)
 											.onAppear {
 												if !isRevealed {
-													imageCache.revealCard(card)
+													imageCache.revealCardAtRandom(card)
 												}
 											}
 									} else if let image = UIImage(data: card.imageData) {
@@ -55,7 +59,7 @@ struct PrizeCheckDeckGridView: View {
 												.opacity(isRevealed ? 1 : 0)
 												.onAppear {
 													if !isRevealed {
-														imageCache.revealCard(card)
+														imageCache.revealCardAtRandom(card)
 													}
 													imageCache.setImage(downscaled, for: card.uniqueId)
 												}
@@ -75,7 +79,9 @@ struct PrizeCheckDeckGridView: View {
 }
 
 #Preview {
-	PrizeCheckDeckGridView(selectedDeckID: "3318B2A1-9A6E-4B34-884F-E8D52A5811A5", imageCache: ImageCacheViewModel())
+	PrizeCheckDeckGridView(deckViewModel: DeckViewModel(imageCache: ImageCacheViewModel()),
+						   selectedDeckID: "3318B2A1-9A6E-4B34-884F-E8D52A5811A5",
+						   imageCache: ImageCacheViewModel())
 }
 
 

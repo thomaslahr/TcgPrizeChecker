@@ -35,7 +35,7 @@ struct FilteredCardRowView: View {
 						Text(card.name)
 					Text("(\(card.localId))")
 					}
-				Text(card.rarity ?? "HALLo")
+			//	Text(card.rarity ?? "HALLo")
 				
 				
 				//For å se hvilket set kortet tilhører.

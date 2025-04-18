@@ -51,7 +51,7 @@ struct DoubleButtonView: View {
 			} label: {
 				ZStack {
 					Circle()
-						.foregroundStyle(.red)
+						.foregroundStyle(GradientColors.primaryAppColor)
 						.frame(maxWidth: 40)
 					Label("Add Card to Playables", systemImage: "tray.2")
 						.labelStyle(.iconOnly)

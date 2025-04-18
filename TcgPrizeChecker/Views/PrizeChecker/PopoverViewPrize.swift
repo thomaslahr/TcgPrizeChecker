@@ -46,8 +46,9 @@ struct PopoverViewPrize: View {
 		
 		VStack{
 			Text(timeSpentDescription)
-				.font(.title2)
-				.bold()
+				.font(.system(size: 18))
+				.fontWeight(.bold)
+				.fontDesign(.rounded)
 				.multilineTextAlignment(.center)
 				.frame(maxWidth: 300)
 				.padding()
@@ -60,8 +61,9 @@ struct PopoverViewPrize: View {
 						}
 					}
 			Text("You got \(correctGuesses.count) out of 6 prize cards right.")
-				.font(.system(size: 18))
-				.bold()
+				.font(.system(size: 14))
+				.fontWeight(.bold)
+				.fontDesign(.rounded)
 				.multilineTextAlignment(.center)
 				.frame(maxWidth: 300)
 				.padding(.vertical, 10)

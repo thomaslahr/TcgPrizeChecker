@@ -12,6 +12,7 @@ struct DeckGridView: View {
 	@Environment(\.modelContext) private var modelContext
 	@EnvironmentObject private var messageManager: MessageManager
 	@ObservedObject var imageCache: ImageCacheViewModel
+	@ObservedObject var deckViewModel: DeckViewModel
 	@State private var cardOffset: CGFloat = 0
 	@State private var isDragging = false
 	@State private var cardOpacity: Double = 1.0
@@ -27,13 +28,17 @@ struct DeckGridView: View {
 	@State private var currentCardIndex: Int?
 	//	@State private var imageCache: [String: UIImage] = [:]
 	
+	//@Binding var isOverlayActive: Bool
+	
 	var body: some View {
 		ZStack {
 			ScrollView {
 				ZStack {
 					LazyVGrid(columns: columns) {
 						if let selectedDeck = decks.first(where: {$0.id == selectedDeckID}) {
-							ForEach(selectedDeck.cards, id: \.uniqueId) { card in
+							let sortedCards = deckViewModel.sortedCards(for: selectedDeck)
+							
+							ForEach(sortedCards, id: \.uniqueId) { card in
 								let isRevealed = imageCache.revealedCardIDs.contains(card.uniqueId)
 								
 								Group {
@@ -45,7 +50,7 @@ struct DeckGridView: View {
 											.opacity(isRevealed ? 1 : 0)
 											.onAppear {
 												if !isRevealed {
-													imageCache.revealCard(card)
+													imageCache.revealCardAtRandom(card)
 												}
 											}
 											.onTapGesture {
@@ -66,7 +71,7 @@ struct DeckGridView: View {
 												.opacity(isRevealed ? 1 : 0)
 												.onAppear {
 													if !isRevealed {
-														imageCache.revealCard(card)
+														imageCache.revealCardAtRandom(card)
 													}
 													imageCache.setImage(downscaled, for: card.uniqueId)
 												}
@@ -104,6 +109,7 @@ struct DeckGridView: View {
 				isDragging: $isDragging
 			)
 			.frame(maxWidth: .infinity, maxHeight: .infinity)
+			
 		}
 	}
 	
@@ -137,5 +143,6 @@ struct DeckGridView: View {
 }
 
 #Preview {
-	DeckGridView(imageCache: ImageCacheViewModel(), selectedDeckID: "3318B2A1-9A6E-4B34-884F-E8D52A5811A5")
+	DeckGridView(imageCache: ImageCacheViewModel(), deckViewModel: DeckViewModel(imageCache: ImageCacheViewModel()), selectedDeckID: "3318B2A1-9A6E-4B34-884F-E8D52A5811A5")
+		.environmentObject(MessageManager())
 }

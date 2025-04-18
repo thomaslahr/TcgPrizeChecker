@@ -18,7 +18,6 @@ struct MainDeckView: View {
 	
 	@ObservedObject var deckViewModel: DeckViewModel
 	
-	@Query var deck: [PersistentCard]
 	@Query var decks: [Deck]
 	
 	@State private var uiState = UIState()
@@ -28,12 +27,13 @@ struct MainDeckView: View {
 	
 	@State private var activeModal: DeckModal?
 	
-	private var selectedDeck: Deck? {
-		decks.first(where: { $0.id == deckSelectionViewModel.selectedDeckID})
-	}
+//	private var selectedDeck: Deck? {
+//		decks.first(where: { $0.id == deckSelectionViewModel.selectedDeckID})
+//	}
+	
+	@State private var selectedDeck: Deck?
 	
 	@State private var showProgressView = false
-	
 	
 	var body: some View {
 		NavigationStack {
@@ -87,6 +87,7 @@ struct MainDeckView: View {
 						} label: {
 							Image(systemName: "gear")
 								.font(.system(size: 27))
+								.foregroundStyle(GradientColors.primaryAppColor)
 								.rotationEffect(.degrees(Double(uiState.rotationAngle)))
 						}
 					} else {
@@ -109,26 +110,37 @@ struct MainDeckView: View {
 						deleteDeck: $uiState.deleteDeck,
 						activeModal: $activeModal
 					)
-					
 					DeckInfoView(
 						viewSelection: $uiState.viewSelection,
-						decks: decks,
-						selectedDeck: selectedDeck,
-						activeModal: $activeModal
+						selectedDeckID: selectedDeck?.id,
+						activeModal: $activeModal,
+						deckViewModel: deckViewModel
 					)
 					if uiState.viewSelection == 1 {
-						Text("Tap on a card to enlarge, hold to delete it.")
-							.font(.callout)
+						ViewDescriptionTextView(text: "Tap on a card to enlarge, hold to delete it.")
 					}
 					switch uiState.viewSelection {
 					case 0:
-						DeckListView(selectedDeckID: deckSelectionViewModel.selectedDeckID)
+						if deckViewModel.isLoadingDeck {
+							LoadingDeckView(selectedDeck: selectedDeck, deckViewModel: deckViewModel)
+						} else if let id = deckViewModel.lastRenderedDeckID {
+							DeckListView(
+								selectedDeckID: id,
+								deckViewModel: deckViewModel,
+								imageCache: imageCache
+							)
+						}
+						
 					default:
 						if deckViewModel.isLoadingDeck {
 							LoadingDeckView(selectedDeck: selectedDeck, deckViewModel: deckViewModel)
 						} else if let id = deckViewModel.lastRenderedDeckID {
 							ZStack {
-								DeckGridView(imageCache: imageCache, selectedDeckID: id)
+								DeckGridView(
+									imageCache: imageCache,
+									deckViewModel: deckViewModel,
+									selectedDeckID: id
+								)
 							}
 			  .transition(.opacity)
 			  .animation(.easeInOut(duration: 0.35), value: id)
@@ -148,27 +160,36 @@ struct MainDeckView: View {
 				}
 			}
 			.onChange(of: deckSelectionViewModel.selectedDeckID) { _, newID in
-				guard let newDeck = decks.first(where: { $0.id == newID }) else { return }
 				
-				deckViewModel.isLoadingDeck = true
-				Task {
-					await deckViewModel.preloadImages(for: newDeck)
+				if let newDeck = decks.first(where: { $0.id == newID }) {
+					selectedDeck = newDeck
 					
-					await MainActor.run {
-						deckViewModel.readyDeckID = newID
-						deckViewModel.lastRenderedDeckID = newID
+					deckViewModel.isLoadingDeck = true
+					Task {
+						await deckViewModel.preloadImages(for: newDeck)
 						
-						// Add a delay ONLY if the images were cached
-						if deckViewModel.isDeckCached(newDeck) {
-							DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+						await MainActor.run {
+							deckViewModel.readyDeckID = newID
+							deckViewModel.lastRenderedDeckID = newID
+							
+							// Add a delay ONLY if the images were cached
+							if deckViewModel.isDeckCached(newDeck) {
+								DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+									deckViewModel.isLoadingDeck = false
+								}
+							} else {
 								deckViewModel.isLoadingDeck = false
 							}
-						} else {
-							deckViewModel.isLoadingDeck = false
 						}
 					}
+					imageCache.revealedCardIDs.removeAll()
 				}
-				imageCache.revealedCardIDs.removeAll()
+				
+				
+			
+//				guard let newDeck = decks.first(where: { $0.id == newID }) else { return }
+				
+				
 			}
 			
 			.overlay {
@@ -239,4 +260,11 @@ private struct UIState {
 	var deleteDeck = false
 	var showImage = false
 	var isShowingMessage = false
+}
+
+enum CardSortOrder: String, Identifiable, Hashable, CaseIterable {
+	case dateAdded = "Date Added"
+	case alphabetical = "Alphabetical"
+	
+	var id: Self { self }
 }

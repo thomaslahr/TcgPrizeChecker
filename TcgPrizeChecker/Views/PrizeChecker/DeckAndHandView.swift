@@ -16,6 +16,7 @@ struct DeckAndHandView: View {
 	
 	let deck: DeckState
 	let isRightCardOnTop: Bool
+	@ObservedObject var imageCache: ImageCacheViewModel
 	
 	
     var body: some View {
@@ -27,8 +28,8 @@ struct DeckAndHandView: View {
 				isCardsInHand: false,
 				spacing: $deckSpacing,
 				tappedDeck: $tappedDeck,
-				isViewTapped: isViewTapped
-				
+				isViewTapped: isViewTapped,
+				imageCache: imageCache
 			)
 			.opacity(tappedHand ? 0 : 1)
 			.scaleEffect(tappedDeck ? 2.0 : 1.0)
@@ -50,7 +51,8 @@ struct DeckAndHandView: View {
 				isCardsInHand: true,
 				spacing: $handSpacing,
 				tappedDeck: $tappedHand,
-				isViewTapped: isViewTapped
+				isViewTapped: isViewTapped,
+				imageCache: imageCache
 			)
 			.opacity(tappedDeck ? 0 : 1)
 			.scaleEffect(tappedHand ? 2.0 : 1.0)
@@ -79,6 +81,7 @@ struct DeckAndHandView: View {
 			cardsInHand: PersistentCard.sampleDeck,
 			remainingCardsInDeck: PersistentCard.sampleDeck
 		),
-		isRightCardOnTop: false
+		isRightCardOnTop: false,
+		imageCache: ImageCacheViewModel()
 	)
 }

@@ -28,12 +28,15 @@ struct PlayableMainView: View {
 		
 		let selectedDeckID = deckSelectionViewModel.selectedDeckID
 		VStack {
-			HStack(spacing: 3) {
+			HStack(spacing: 4) {
 				if deckSelectionViewModel.selectedDeckID != nil {
 					Text("Add cards to the")
+						.fontWeight(.bold)
+
 					CustomPickerMenuView(decks: decks)
-					Text("deck.")
-				}
+					Text("deck")
+						.fontWeight(.bold)
+					}
 			}
 			.padding(.top, 15)
 			.font(.callout)
@@ -80,4 +83,5 @@ struct PlayableMainView: View {
 #Preview {
 	PlayableMainView(selectedDeck: nil)
 		.environmentObject(DeckSelectionViewModel())
+		.environmentObject(MessageManager())
 }

@@ -22,6 +22,8 @@ struct PrizeCheckerHeaderView: View {
 				} label: {
 					Image(systemName: "list.clipboard")
 						.font(.system(size: 30))
+						.foregroundStyle(timerViewModel.isRunning ? GradientColors.gray : GradientColors.primaryAppColor)
+						.animation(.easeInOut(duration: 0.2), value: timerViewModel.isRunning)
 				}
 				.disabled(timerViewModel.isRunning)
 				.padding(.leading, 20)
@@ -41,10 +43,13 @@ struct PrizeCheckerHeaderView: View {
 						rotationAngle += 120
 					}
 					
+					
 				} label: {
 					Image(systemName: "gear")
 						.font(.system(size: 30))
+						.foregroundStyle(timerViewModel.isRunning ? GradientColors.gray : GradientColors.primaryAppColor)
 						.rotationEffect(.degrees(Double(rotationAngle)))
+						.animation(.easeInOut(duration: 0.2), value: timerViewModel.isRunning)
 				}
 				.disabled(timerViewModel.isRunning)
 				.padding(.trailing, 20)

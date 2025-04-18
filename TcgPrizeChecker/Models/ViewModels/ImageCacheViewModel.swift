@@ -43,7 +43,7 @@ class ImageCacheViewModel: ObservableObject {
 		return true
 	}
 	
-	func revealCard(_ card: PersistentCard) {
+	func revealCardAtRandom(_ card: PersistentCard) {
 		guard !revealedCardIDs.contains(card.uniqueId) else { return }
 
 		let delay = Double(abs(card.uniqueId.hashValue % 10)) * 0.03
@@ -54,6 +54,34 @@ class ImageCacheViewModel: ObservableObject {
 			}
 		}
 	}
+	
+	
+	func revealCardInOrder(_ card: PersistentCard, at index: Int) {
+		guard !revealedCardIDs.contains(card.uniqueId) else { return }
+
+		let delay = 0.02 // Adjust timing to your liking
+
+		DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+			withAnimation(.easeIn(duration: 0.1)) {
+				_ = self.revealedCardIDs.insert(card.uniqueId)
+			}
+		}
+	}
+	func loadImage(for card: PersistentCard, targetSize: CGSize = CGSize(width: 140, height: 200)) -> UIImage? {
+		if let cached = cache[card.uniqueId] {
+			return cached
+		}
+		
+		if let image = UIImage(data: card.imageData),
+		   let downscaled = image.downscaled(to: targetSize) {
+			DispatchQueue.main.async {
+				self.setImage(downscaled, for: card.uniqueId)
+			}
+			return downscaled
+		}
+		return nil
+	}
+	
 }
 
 extension UIImage {

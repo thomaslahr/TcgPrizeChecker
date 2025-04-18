@@ -11,6 +11,9 @@ class PrizeCheckViewModel: ObservableObject {
 	@Published var deckState = DeckState()
 	@Published var userGuesses: [String] = Array(repeating: "", count: 6)
 	@Published var guessResult: [Answer] = Array(repeating: .guess, count: 6)
+	@Published var tappedDeck = false
+	@Published var tappedHand = false
+	@Published var isViewTapped = false
 	
 	func shuffleDeck(deck: Deck?) {
 		guard let cards = deck?.cards else {
@@ -64,6 +67,9 @@ class PrizeCheckViewModel: ObservableObject {
 	func fullViewReset() {
 		deckState.remainingCardsInDeck.removeAll()
 		deckState.cardsInHand.removeAll()
+		tappedDeck = false
+		tappedHand = false
+		isViewTapped = false
 		//prizeCards.removeAll()
 		//elapsedTime = 0.0
 		//timer.string = "0.00"

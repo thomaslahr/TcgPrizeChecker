@@ -24,8 +24,8 @@ struct AddEnergyCardView: View {
 	var body: some View {
 			VStack {
 				VStack {
-					Text("Tap on an energy card")
-					Text("to add a copy to your deck")
+					ViewDescriptionTextView(text: "Tap on an enery card \n to add a copy to the deck")
+						.multilineTextAlignment(.center)
 				}
 				.fontWeight(.semibold)
 				.fontDesign(.rounded)

@@ -29,12 +29,17 @@ struct DeckCardOverlayView: View {
 					.fontWeight(.bold)
 					.fontDesign(.rounded)
 					.multilineTextAlignment(.center)
+					.padding(.vertical, 10)
+					.background {
+						RoundedRectangle(cornerRadius: 8)
+							.fill(colorScheme == .dark ? Color.black.opacity(0.5) : Color.white.opacity(0.5))
+					}
 				
 				Image(uiImage: uiImage)
 					.resizable()
 					.aspectRatio(contentMode: .fit)
 					.frame(
-						width: geometry.size.width * 0.5)
+						width: geometry.size.width * 0.6)
 					.padding(.horizontal, 30)
 				//.transition(.scale)
 				
@@ -85,7 +90,11 @@ struct DeckCardOverlayView: View {
 					.fontWeight(.bold)
 					.fontDesign(.rounded)
 					.multilineTextAlignment(.center)
-					.padding(.top, 10)
+					.padding(.vertical, 10)
+					.background {
+						RoundedRectangle(cornerRadius: 8)
+							.fill(colorScheme == .dark ? Color.black.opacity(0.5) : Color.white.opacity(0.5))
+					}
 			}
 			.frame(maxWidth: .infinity)
 			

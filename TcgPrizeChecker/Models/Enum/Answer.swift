@@ -22,6 +22,7 @@ enum Answer {
 			"questionmark.circle"
 		}
 	}
+
 	
 	var sfSymbolColor: Color {
 		switch self {

@@ -44,19 +44,29 @@ struct FilteredCardsView: View {
 			
 			VStack {
 				if !searchText.isEmpty {
-					Text("Number of returned cards: \(filteredCards.count)")
-						.font(.caption)
-						.fontWeight(.bold)
-						.blur(radius: (tappedCard != nil) ? 5 : 0)
-						.padding(.top, 8)
-					
+					HStack {
+						Text("Number of returned cards: \(filteredCards.count)")
+							.font(.caption)
+							.fontWeight(.bold)
+							.blur(radius: (tappedCard != nil) ? 5 : 0)
+							.padding(.top, 8)
+						
+						Spacer()
+						//Siden api kallet bruker mye data på fetching av bilder, så kan man velge hvorvidt man vil at det skal vises eller ikke.
+						HStack{
+							Text("Show Image")
+								.font(.caption)
+								.fontWeight(.bold)
+								.blur(radius: (tappedCard != nil) ? 5 : 0)
+								.padding(.top, 8)
+							Toggle("Show Image", isOn: $showImage)
+								.labelsHidden()
+								.padding(.top, 8)
+								.blur(radius: (tappedCard != nil) ? 5 : 0)
+						}
+					}
+					.padding(10)
 				}
-				//Siden api kallet bruker mye data på fetching av bilder, så kan man velge hvorvidt man vil at det skal vises eller ikke.
-				Toggle(isOn: $showImage) {
-					Text("Show Image")
-				}
-				.padding(.top, 8)
-				.blur(radius: (tappedCard != nil) ? 5 : 0)
 				
 				ScrollView {
 					LazyVStack {
@@ -74,11 +84,12 @@ struct FilteredCardsView: View {
 								tappedCard: $tappedCard,
 								isInputActive: isInputActive
 							)
-								
+							
 							Divider()
 								.padding(.horizontal)
 						}
 					}
+					.padding(.trailing, 13)
 				}
 				.blur(radius: (tappedCard != nil) ? 5 : 0)
 				.task {
@@ -87,7 +98,6 @@ struct FilteredCardsView: View {
 				}
 				
 			}
-			.padding(.horizontal, 5)
 			
 			if isButtonDisabled {
 				MessageView(messageContent: "There is no deck,")
@@ -122,7 +132,7 @@ struct FilteredCardsView: View {
 		.onAppear {
 			updateButtonState()
 		}
-
+		
 	}
 	
 	private func updateButtonState() {
@@ -146,4 +156,5 @@ struct FilteredCardsView: View {
 		searchText: "Mock",
 		isInputActive: .constant(false)
 	)
+	.environmentObject(MessageManager())
 }

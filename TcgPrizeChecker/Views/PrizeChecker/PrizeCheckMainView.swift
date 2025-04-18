@@ -35,31 +35,43 @@ struct PrizeCheckView: View {
 	
 	@ObservedObject var deckViewModel: DeckViewModel
 	
+	
+	@FocusState private var focusedFieldIndex: Int?
 	var body: some View {
 		NavigationStack {
 			ZStack {
-				if uiState.tappedDeck || uiState.tappedHand {
+				if prizeCheckViewModel.tappedDeck || prizeCheckViewModel.tappedHand {
 					Color.black.opacity(0.5) // Semi-transparent background
 						.edgesIgnoringSafeArea(.all) // Make it cover the entire screen
 						.transition(.opacity)
 						.zIndex(0) // Put the overlay behind everything else
 				}
-				VStack {
+				VStack(spacing: 5) {
 					PrizeCheckerHeaderView(
 						timerViewModel: timerViewModel,
 						rotationAngle: $rotationAngle,
 						activeModal: $activeModal,
 						hideTimer: uiState.hideTimer
 					)
+					.onTapGesture {
+						focusedFieldIndex = nil
+					}
+					
 					ScrollView {
 						// Deck-picker-en øverst i viewet
-						if deckSelectionViewModel.selectedDeckID != nil {
+						if deckSelectionViewModel.selectedDeckID != nil && prizeCheckViewModel.deckState.cardsInHand.isEmpty {
 							HStack(spacing: 2) {
 								Text("Current Deck:")
 									.fontWeight(.semibold)
 									.fontDesign(.rounded)
 								CustomPickerMenuView(decks: decks)
 									.disabled(timerViewModel.isRunning && !prizeCheckViewModel.deckState.cardsInHand.isEmpty)
+							}
+							.padding(.vertical, 5)
+							.frame(maxWidth: .infinity)
+							.overlay(alignment: .trailing) {
+								SortMenuView(deckViewModel: deckViewModel, paddingSize: 8, fontSize: 10)
+									.padding(.horizontal, 15)
 							}
 						}
 						
@@ -69,11 +81,19 @@ struct PrizeCheckView: View {
 							DeckAndHandView(
 								deckSpacing: $deckSpacing,
 								handSpacing: $handSpacing,
-								tappedDeck: $uiState.tappedDeck,
-								tappedHand: $uiState.tappedHand,
-								isViewTapped: $uiState.isViewTapped,
+								tappedDeck: $prizeCheckViewModel.tappedDeck,
+								tappedHand: $prizeCheckViewModel.tappedHand,
+								isViewTapped: $prizeCheckViewModel.isViewTapped,
 								deck: prizeCheckViewModel.deckState,
-								isRightCardOnTop: uiState.isRightCardOnTop
+								isRightCardOnTop: uiState.isRightCardOnTop,
+								imageCache: imageCache,
+							)
+							.simultaneousGesture(
+								TapGesture()
+									.onEnded {
+											focusedFieldIndex = nil
+										
+									}
 							)
 							
 							
@@ -81,9 +101,10 @@ struct PrizeCheckView: View {
 							GuessPrizeCardsView(
 								userGuesses: $prizeCheckViewModel.userGuesses,
 								guessResult: $prizeCheckViewModel.guessResult,
-								isTimerRunning: timerViewModel.isRunning
-							)
-							.opacity(uiState.tappedDeck || uiState.tappedHand ? 0 : 1)
+								isTimerRunning: timerViewModel.isRunning,
+								focusedFieldIndex: $focusedFieldIndex)
+							
+							.opacity(prizeCheckViewModel.tappedDeck || prizeCheckViewModel.tappedHand ? 0 : 1)
 							.padding()
 						}
 						
@@ -92,8 +113,14 @@ struct PrizeCheckView: View {
 								if deckViewModel.isLoadingDeck {
 									LoadingDeckView(selectedDeck: selectedDeck, deckViewModel: deckViewModel)
 								} else if let id = deckViewModel.lastRenderedDeckID {
-									PrizeCheckDeckGridView(selectedDeckID: id, imageCache: imageCache)
-										.transition(.opacity)
+									PrizeCheckDeckGridView(
+										deckViewModel: deckViewModel,
+										selectedDeckID: id,
+										imageCache: imageCache
+									)
+									.transition(
+										.opacity
+									)
 								}
 							}
 							.id(deckViewModel.lastRenderedDeckID) // Force fresh render on deck switch
@@ -101,42 +128,22 @@ struct PrizeCheckView: View {
 							.opacity(timerViewModel.isRunning ? 0 : 1)
 						}
 			
-						if let selectedDeck = selectedDeck {
-							if selectedDeck.cards.count < 14 {
+						if let selectedDeck = selectedDeck, selectedDeck.cards.count < 14 {
 								Text("There isn't enough cards in the deck yet to prize check.")
 							}
-						}
 					}
-					.scrollDisabled(uiState.tappedDeck || uiState.tappedHand)
-					//Hvis brukeren endrer deck i f.eks MainDeckView, så nullstilles dette viewet, så det ikke vises noen kort. 17.12.24
+					.scrollDisabled(prizeCheckViewModel.tappedDeck || prizeCheckViewModel.tappedHand)
 					
-					.onChange(of: deckSelectionViewModel.selectedDeckID) { oldValue, newValue in
+					
+					//Hvis brukeren endrer deck i f.eks MainDeckView, så nullstilles dette viewet, så det ikke vises noen kort. 17.12.24
+					.onChange(of: deckSelectionViewModel.selectedDeckID) { _, newID in
 						if !prizeCheckViewModel.deckState.cardsInHand.isEmpty {
 							withAnimation {
 								prizeCheckViewModel.fullViewReset()
 							}
 							print("The Cards in the Prize Checker was removed.")
 						}
-					}
-					//Hvis bruker legger til eller sletter kort fra decket, så nullstilles også viewet. Mulig denne logikken kan slås sammen med den over?. 17.12.24
-					.onChange(of: selectedDeck?.cards.count) { oldValue, newValue in
-						if !prizeCheckViewModel.deckState.cardsInHand.isEmpty {
-							withAnimation {
-								prizeCheckViewModel.fullViewReset()
-								
-							}
-							print("The Prize Checker was reset.")
-						}
-					}
-					.onChange(of: scenePhase) { oldPhase, newPhase in
-						if newPhase != .active && timerViewModel.isRunning {
-							// App is no longer active → reset everything
-							timerViewModel.stopAndReset()
-							//timer.string = "0.00"
-							print("App moved to background or became inactive — timer stopped and reset.")
-						}
-					}
-					.onChange(of: deckSelectionViewModel.selectedDeckID) { _, newID in
+						
 						guard let newDeck = decks.first(where: { $0.id == newID }) else { return }
 						
 						deckViewModel.isLoadingDeck = true
@@ -159,11 +166,29 @@ struct PrizeCheckView: View {
 						}
 						imageCache.revealedCardIDs.removeAll()
 					}
+					//Hvis bruker legger til eller sletter kort fra decket, så nullstilles også viewet. Mulig denne logikken kan slås sammen med den over?. 17.12.24
+					.onChange(of: selectedDeck?.cards.count) { oldValue, newValue in
+						if !prizeCheckViewModel.deckState.cardsInHand.isEmpty {
+							withAnimation {
+								prizeCheckViewModel.fullViewReset()
+								
+							}
+							print("The Prize Checker was reset.")
+						}
+					}
+					.onChange(of: scenePhase) { oldPhase, newPhase in
+						if newPhase != .active && timerViewModel.isRunning {
+							// App is no longer active → reset everything
+							timerViewModel.stopAndReset()
+							//timer.string = "0.00"
+							print("App moved to background or became inactive — timer stopped and reset.")
+						}
+					}
+					
 					.onDisappear {
 						prizeCheckViewModel.fullViewReset()
-						
 						timerViewModel.isRunning = false
-						//timer.string = "0.00"
+						timerViewModel.string = "0.00"
 					}
 					
 					//Knappene nederst i viewet, over TabViewet.
@@ -175,7 +200,9 @@ struct PrizeCheckView: View {
 							ZStack {
 								Button {
 									timerViewModel.isRunning = false
+									timerViewModel.string = "0.00"
 									prizeCheckViewModel.fullViewReset()
+			
 								} label: {
 									Image(systemName: "x.circle")
 										.font(.title)
@@ -216,6 +243,7 @@ struct PrizeCheckView: View {
 								} label: {
 									Image(systemName: "info.circle")
 										.font(.title)
+										.foregroundStyle(GradientColors.primaryAppColor)
 								}
 								.disabled(timerViewModel.isRunning)
 								.padding(.trailing, 20)
@@ -252,6 +280,18 @@ struct PrizeCheckView: View {
 						}
 					}
 				}
+			}
+//			.simultaneousGesture(
+//				TapGesture()
+//					.onEnded {
+//						focusedFieldIndex = nil
+//					}
+//			)
+			.background {
+//				if timerViewModel.isRunning {
+//					Rectangle()
+//						.fill(GradientColors.primaryAppColor).ignoresSafeArea()
+//				}
 			}
 			.navigationTitle("Prize Check")
 			.navigationBarTitleDisplayMode(.inline)
@@ -311,8 +351,5 @@ private struct UIState {
 	var showResultsPopover = false
 	var isRightCardOnTop = false
 	var hideTimer = false
-	var tappedDeck = false
-	var tappedHand = false
-	var isViewTapped = false
 }
 
