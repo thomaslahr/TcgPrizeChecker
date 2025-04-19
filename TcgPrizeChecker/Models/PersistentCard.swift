@@ -20,19 +20,22 @@ class PersistentCard {
 	var uniqueId: String
 	
 	var dateAdded = Date()
+	var category: String?
 	
 	init(
 		imageData: Data,
 		id: String,
 		localId: String,
 		name: String,
-		uniqueId: String
+		uniqueId: String,
+		category: String
 	) {
 		self.imageData = imageData
 		self.id = id
 		self.localId = localId
 		self.name = name
 		self.uniqueId = uniqueId
+		self.category = category
 	}
 	
 	enum CodingKeys: String, CodingKey {
@@ -53,15 +56,15 @@ class PersistentCard {
 
 extension PersistentCard {
 	static let sampleDeck: [PersistentCard] = [
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString),
+		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
+		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
+		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
+		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
+		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
+		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
+		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
+		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
+		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
+		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
 	]
 }

@@ -18,6 +18,7 @@ struct Card: Decodable, Hashable, Identifiable {
 	//Disse gjelder ikke på card objectene som er i cardSet
 //	var category: Category?
 	var rarity: String?
+	var category: String?
 //	let regulationMark: String?
 	
 	//Dette er (ment til å være) instansieringen av CardSet-modellen som allerede er her. Den under er en ny versjon.

@@ -41,7 +41,8 @@ struct AddEnergyCardView: View {
 										id: "",
 										localId: "",
 										name: energyCard.name,
-										uniqueId: UUID().uuidString
+										uniqueId: UUID().uuidString,
+										category: "Energy"
 									)
 									if let selectedDeck = selectedDeck {
 										selectedDeck.cards.append(newEnergyCard)

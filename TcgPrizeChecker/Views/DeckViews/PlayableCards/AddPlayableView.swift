@@ -92,7 +92,8 @@ struct AddPlayableView: View {
 			id: card.id,
 			localId: card.localId,
 			name: card.name,
-			uniqueId: UUID().uuidString
+			uniqueId: UUID().uuidString,
+			category: card.category
 		)
 		
 		selectedDeck.cards.append(newDeckCard)

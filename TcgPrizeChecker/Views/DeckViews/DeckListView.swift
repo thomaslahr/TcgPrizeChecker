@@ -35,6 +35,7 @@ struct DeckListView: View {
 							Text(card.name)
 								.fontWeight(.bold)
 								.font(.system(size: 18))
+							Text(card.category ?? "Not defined")
 							if let cardSetName = CardSetName.fromCardSetID(card.id) {
 								Text("(\(cardSetName.rawValue))")
 									.font(.system(size: 13))

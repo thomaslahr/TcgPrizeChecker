@@ -112,7 +112,7 @@ struct DoubleButtonView: View {
 		let deckNameToUse = (type == .deck) ? deckName : "Not to Deck"
 		let deckIDToUse = (type == .deck) ? selectedDeckID : "Not deck"
 		
-		allCardsViewModel.saveImageToSwiftDataVM(
+		await allCardsViewModel.saveImageToSwiftDataVM(
 			modelContext: modelContext,
 			imageData: imageData,
 			id: card.id,

@@ -19,19 +19,22 @@ class PlayableCard {
 	var localId: String
 	var name: String
 	var uniqueId: String
+	var category: String
 	
 	init(
 		imageData: Data,
 		id: String,
 		localId: String,
 		name: String,
-		uniqueId: String
+		uniqueId: String,
+		category: String
 	) {
 		self.imageData = imageData
 		self.id = id
 		self.localId = localId
 		self.name = name
 		self.uniqueId = uniqueId
+		self.category = category
 	}
 	
 	enum CodingKeys: String, CodingKey {

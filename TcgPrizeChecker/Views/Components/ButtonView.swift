@@ -32,7 +32,7 @@ struct ButtonView: View {
 					
 					let imageData = try await allCardsViewModel.downloadImage(from: imageURL)
 					
-					allCardsViewModel.saveImageToSwiftDataVM(
+					await allCardsViewModel.saveImageToSwiftDataVM(
 						modelContext: modelContext,
 						imageData: imageData,
 						id: card.id,
@@ -41,7 +41,7 @@ struct ButtonView: View {
 						cardToSave: cardToSave,
 						deckName: deckName,
 						selectedDeckID: selectedDeckID,
-						selectedDeck: selectedDeck ?? Deck(name: "Not a deck")
+						selectedDeck: selectedDeck ?? Deck(name: "Not a deck"),
 					)
 					
 					

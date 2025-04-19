@@ -43,19 +43,37 @@ class AllCardsViewModel: ObservableObject {
 	}
 	
 	@MainActor
-	func saveImageToSwiftDataVM(modelContext: ModelContext, imageData: Data, id: String, localId: String, name: String, cardToSave: String, deckName: String, selectedDeckID: String, selectedDeck: Deck) {
-		
-		dataService.saveImageToSwiftDataDS(
-			modelContext: modelContext,
-			imageData: imageData,
-			id: id,
-			localId: localId,
-			name: name,
-			cardToSave: cardToSave,
-			deckName: deckName,
-			selectedDeckID: selectedDeckID,
-			selectedDeck: selectedDeck
-		)
+	func saveImageToSwiftDataVM(
+		modelContext: ModelContext,
+		imageData: Data,
+		id: String,
+		localId: String,
+		name: String,
+		cardToSave: String,
+		deckName: String,
+		selectedDeckID: String,
+		selectedDeck: Deck,
+		//category: String
+	) async {
+		do {
+			let detailedCard = try await dataService.fetchDetailedCard(cardID: id)
+			
+			dataService.saveImageToSwiftDataDS(
+				modelContext: modelContext,
+				imageData: imageData,
+				id: detailedCard.id,
+				localId: detailedCard.id,
+				name: detailedCard.name,
+				cardToSave: cardToSave,
+				deckName: deckName,
+				selectedDeckID: selectedDeckID,
+				selectedDeck: selectedDeck,
+				category: detailedCard.category ?? "No Value"
+				)
+		} catch {
+			print("Failed to save card with ID \(id): \(error.localizedDescription)")
+
+		}
 	}
 }
 
