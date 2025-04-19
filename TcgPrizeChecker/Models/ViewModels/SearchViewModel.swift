@@ -11,6 +11,11 @@ import Foundation
 class SearchViewModel: ObservableObject {
 	@Published var searchText = ""
 	@Published var results: [Card] = []
+	@Published var sortOption: CardSortOption = .nameAscending {
+		didSet {
+			results = sortCards(results)
+		}
+	}
 
 	private var allCards: [Card] = []
 	private var cancellables = Set<AnyCancellable>()
@@ -35,9 +40,9 @@ class SearchViewModel: ObservableObject {
 	}
 	
 	private func performSearch(query: String) {
-			let lowercasedQuery = query.lowercased()
+		let normalizedQuery = query.foldingForSearch
 			
-			guard !lowercasedQuery.isEmpty else {
+			guard !normalizedQuery.isEmpty else {
 				results = []
 				return
 			}
@@ -49,20 +54,56 @@ class SearchViewModel: ObservableObject {
 			
 			// Then, apply name matching logic
 			let matchingCards: [Card]
-			if query.count == 1 {
+		if query.count == 1 || query.count == 2 {
 				matchingCards = filtered.filter { card in
-					card.name.lowercased().hasPrefix(lowercasedQuery)
+					card.name.foldingForSearch.hasPrefix(normalizedQuery)
 				}
 			} else {
 				matchingCards = filtered.filter { card in
-					card.name.localizedCaseInsensitiveContains(query)
+					card.name.foldingForSearch.contains(normalizedQuery)
 				}
 			}
 			
-			results = matchingCards
+			results = sortCards(matchingCards)
 		}
+	
+	
+	private func sortCards(_ cards: [Card]) -> [Card] {
+		switch sortOption {
+			
+		case .nameAscending:
+			return cards.sorted {
+				($0.name, $0.id) < ($1.name, $1.id)
+			}
+		case .nameDescending:
+			return cards.sorted {
+				($0.name, $0.id) > ($1.name, $1.id)
+			}
+		case .idAscending:
+			return cards.sorted { $0.id < $1.id }
+		case .idDescending:
+			return cards.sorted { $0.id > $1.id }
+		}
+	}
+
 }
 
+enum CardSortOption: String, CaseIterable, Identifiable {
+	case nameAscending = "Name (a-z)"
+	case nameDescending = "Name (z-a)"
+	case idAscending = "Set release (ascending)"
+	case idDescending = "Set release (descending)"
+	
+	var id: String { rawValue }
+}
+
+extension String {
+	var foldingForSearch: String {
+		folding(options: .diacriticInsensitive, locale: .current)
+			.replacingOccurrences(of: "’", with: "'")
+			.lowercased()
+	}
+}
 
 
 //import SwiftUI

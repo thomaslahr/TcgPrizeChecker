@@ -16,18 +16,18 @@ struct PrizeCheckerHeaderView: View {
 	var body: some View {
 		HStack {
 			ZStack {
-				Button {
-					activeModal = .results
-					print("Results button was pressed.")
-				} label: {
-					Image(systemName: "list.clipboard")
-						.font(.system(size: 30))
-						.foregroundStyle(timerViewModel.isRunning ? GradientColors.gray : GradientColors.primaryAppColor)
-						.animation(.easeInOut(duration: 0.2), value: timerViewModel.isRunning)
-				}
-				.disabled(timerViewModel.isRunning)
-				.padding(.leading, 20)
-				.frame(maxWidth: .infinity, alignment: .leading)
+//				Button {
+//					activeModal = .results
+//					print("Results button was pressed.")
+//				} label: {
+//					Image(systemName: "list.clipboard")
+//						.font(.system(size: 30))
+//						.foregroundStyle(timerViewModel.isRunning ? GradientColors.gray : GradientColors.primaryAppColor)
+//						.animation(.easeInOut(duration: 0.2), value: timerViewModel.isRunning)
+//				}
+//				.disabled(timerViewModel.isRunning)
+//				.padding(.leading, 20)
+//				.frame(maxWidth: .infinity, alignment: .leading)
 				
 				
 				TimerView(timerViewModel: timerViewModel)
@@ -36,24 +36,24 @@ struct PrizeCheckerHeaderView: View {
 					.frame(maxWidth: .infinity, alignment: .center)
 				//.border(.red)
 				
-				Button {
-					activeModal = .settings
-					print("Settings button was pressed")
-					withAnimation(.easeInOut(duration: 0.6)) {
-						rotationAngle += 120
-					}
-					
-					
-				} label: {
-					Image(systemName: "gear")
-						.font(.system(size: 30))
-						.foregroundStyle(timerViewModel.isRunning ? GradientColors.gray : GradientColors.primaryAppColor)
-						.rotationEffect(.degrees(Double(rotationAngle)))
-						.animation(.easeInOut(duration: 0.2), value: timerViewModel.isRunning)
-				}
-				.disabled(timerViewModel.isRunning)
-				.padding(.trailing, 20)
-				.frame(maxWidth: .infinity, alignment: .trailing)
+//				Button {
+//					activeModal = .settings
+//					print("Settings button was pressed")
+//					withAnimation(.easeInOut(duration: 0.6)) {
+//						rotationAngle += 120
+//					}
+//					
+//					
+//				} label: {
+//					Image(systemName: "gear")
+//						.font(.system(size: 30))
+//						.foregroundStyle(timerViewModel.isRunning ? GradientColors.gray : GradientColors.primaryAppColor)
+//						.rotationEffect(.degrees(Double(rotationAngle)))
+//						.animation(.easeInOut(duration: 0.2), value: timerViewModel.isRunning)
+//				}
+//				.disabled(timerViewModel.isRunning)
+//				.padding(.trailing, 20)
+//				.frame(maxWidth: .infinity, alignment: .trailing)
 			}
 		}
 		.frame(maxWidth: .infinity)

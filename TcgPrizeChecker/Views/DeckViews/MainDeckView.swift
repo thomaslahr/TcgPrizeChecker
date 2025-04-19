@@ -27,9 +27,9 @@ struct MainDeckView: View {
 	
 	@State private var activeModal: DeckModal?
 	
-//	private var selectedDeck: Deck? {
-//		decks.first(where: { $0.id == deckSelectionViewModel.selectedDeckID})
-//	}
+	//	private var selectedDeck: Deck? {
+	//		decks.first(where: { $0.id == deckSelectionViewModel.selectedDeckID})
+	//	}
 	
 	@State private var selectedDeck: Deck?
 	
@@ -39,8 +39,26 @@ struct MainDeckView: View {
 		NavigationStack {
 			VStack {
 				HStack{
-					Image(systemName: "magnifyingglass")
-						.padding(.leading, 5)
+					
+					ZStack {
+						if !isInputActive && searchViewModel.searchText.isEmpty {
+							Image(systemName: "magnifyingglass")
+								.transition(.opacity.combined(with: .scale))
+						} else {
+							SortMenuView<CardSortOption>(
+								sortOrder: $searchViewModel.sortOption,
+								paddingSize: 8,
+								fontSize: 20,
+								menuImageName: "slider.horizontal.3"
+							)
+							.padding(.trailing, 10)
+							.transition(.opacity.combined(with: .scale))
+						}
+					}
+					.frame(width: 20)
+					.padding(.horizontal, 5)
+					.animation(.easeInOut(duration: 0.3), value: isInputActive)
+					
 					TextField(text: $searchViewModel.searchText) {
 						Text("Search for cards to add")
 							.foregroundStyle(.gray)
@@ -49,20 +67,23 @@ struct MainDeckView: View {
 					.autocorrectionDisabled(true)
 					.padding(.leading, 7)
 					.padding(.vertical, 8)
+					.animation(.easeInOut(duration: 0.2), value: isInputActive)
 					.background {
-						RoundedRectangle(cornerRadius: 8).fill(.gray.opacity(0.2))
+						RoundedRectangle(cornerRadius: 8)
+							.fill(.gray.opacity(0.2))
+							.animation(.easeInOut(duration: 0.2), value: isInputActive)
 							.background {
 								RoundedRectangle(cornerRadius: 8)
 									.stroke(lineWidth: 1)
 									.foregroundStyle(isInputActive ? .blue : .clear)
-									.animation(.easeIn(duration: 0.1), value: isInputActive)
+									.animation(.easeInOut(duration: 0.2), value: isInputActive)
 							}
 						
 					}
-//					.onChange(of: searchViewModel.searchText) { oldValue, newValue in
-//						searchViewModel.debounceSearch(query: newValue, allCards: allCardsViewModel.cards)
-//						//handleSearch(newValue)
-//					}
+					//					.onChange(of: searchViewModel.searchText) { oldValue, newValue in
+					//						searchViewModel.debounceSearch(query: newValue, allCards: allCardsViewModel.cards)
+					//						//handleSearch(newValue)
+					//					}
 					.onChange(of: allCardsViewModel.cards) { _, newCards in
 						searchViewModel.updateAllCards(newCards)
 					}
@@ -78,26 +99,29 @@ struct MainDeckView: View {
 							.padding(.trailing, 10)
 						}
 					}
-					if !isInputActive && searchViewModel.searchText.isEmpty {
-						Button {
-							withAnimation(.easeInOut(duration: 0.6)) {
-								uiState.rotationAngle += 120
-								activeModal = .settings
+					ZStack {
+						if !isInputActive && searchViewModel.searchText.isEmpty {
+							Button {
+								withAnimation(.easeInOut(duration: 0.6)) {
+									uiState.rotationAngle += 120
+									activeModal = .settings
+								}
+							} label: {
+								Image(systemName: "gear")
+									.font(.system(size: 27))
+									.foregroundStyle(GradientColors.primaryAppColor)
+									.rotationEffect(.degrees(Double(uiState.rotationAngle)))
 							}
-						} label: {
-							Image(systemName: "gear")
-								.font(.system(size: 27))
-								.foregroundStyle(GradientColors.primaryAppColor)
-								.rotationEffect(.degrees(Double(uiState.rotationAngle)))
+							.transition(.opacity)
+						} else {
+							Button("Cancel") {
+								isInputActive = false
+								searchViewModel.searchText = ""
+							}
+							.transition(.opacity)
 						}
-					} else {
-						Button("Cancel") {
-							isInputActive = false
-							searchViewModel.searchText = ""
-						}
-						.opacity(isInputActive || !searchViewModel.searchText.isEmpty ? 1 : 0)
-						.animation(.easeIn(duration: 0.2), value: isInputActive)
 					}
+					.animation(.easeIn(duration: 0.1), value: isInputActive)
 				}
 				.padding(.horizontal, 15)
 				
@@ -142,9 +166,9 @@ struct MainDeckView: View {
 									selectedDeckID: id
 								)
 							}
-			  .transition(.opacity)
-			  .animation(.easeInOut(duration: 0.35), value: id)
-	  }
+							.transition(.opacity)
+							.animation(.easeInOut(duration: 0.35), value: id)
+						}
 					}
 				} else {
 					// deckName er kun for debugging, det trengs ikke for logikken som implementerer decks.
@@ -158,6 +182,9 @@ struct MainDeckView: View {
 									  searchText: searchViewModel.searchText,
 									  isInputActive:  Binding<Bool>(get: { isInputActive }, set: { isInputActive = $0 }))
 				}
+			}
+			.onTapGesture {
+				isInputActive = false
 			}
 			.onChange(of: deckSelectionViewModel.selectedDeckID) { _, newID in
 				
@@ -186,8 +213,8 @@ struct MainDeckView: View {
 				}
 				
 				
-			
-//				guard let newDeck = decks.first(where: { $0.id == newID }) else { return }
+				
+				//				guard let newDeck = decks.first(where: { $0.id == newID }) else { return }
 				
 				
 			}

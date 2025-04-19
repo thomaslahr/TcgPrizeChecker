@@ -35,7 +35,12 @@ struct DeckInfoView: View {
 			}
 			Spacer()
 			HStack(spacing: 5){
-				SortMenuView(deckViewModel: deckViewModel, paddingSize: 11.5, fontSize: 17)
+				SortMenuView<CardSortOrder>(
+					sortOrder: $deckViewModel.cardSortOrder,
+					paddingSize: 11.5,
+					fontSize: 17,
+					menuImageName: "arrow.up.arrow.down"
+				)
 				
 				Button {
 					activeModal = .playable

@@ -47,33 +47,72 @@ struct PrizeCheckView: View {
 						.zIndex(0) // Put the overlay behind everything else
 				}
 				VStack(spacing: 5) {
-					PrizeCheckerHeaderView(
-						timerViewModel: timerViewModel,
-						rotationAngle: $rotationAngle,
-						activeModal: $activeModal,
-						hideTimer: uiState.hideTimer
-					)
-					.onTapGesture {
-						focusedFieldIndex = nil
+					if timerViewModel.isRunning {
+						PrizeCheckerHeaderView(
+							timerViewModel: timerViewModel,
+							rotationAngle: $rotationAngle,
+							activeModal: $activeModal,
+							hideTimer: uiState.hideTimer
+						)
+						.onTapGesture {
+							focusedFieldIndex = nil
+						}
+					}
+					// Deck-picker-en øverst i viewet
+					if deckSelectionViewModel.selectedDeckID != nil && prizeCheckViewModel.deckState.cardsInHand.isEmpty {
+						HStack(spacing: 2) {
+							Text("Current Deck:")
+								.fontWeight(.semibold)
+								.fontDesign(.rounded)
+							CustomPickerMenuView(decks: decks)
+								.disabled(timerViewModel.isRunning && !prizeCheckViewModel.deckState.cardsInHand.isEmpty)
+						}
+						.padding(.vertical, 5)
+						.frame(maxWidth: .infinity)
+						.overlay {
+							HStack {
+								Button {
+									activeModal = .results
+									print("Results button was pressed.")
+								} label: {
+									Image(systemName: "list.clipboard")
+										.font(.system(size: 22))
+										.foregroundStyle(timerViewModel.isRunning ? GradientColors.gray : GradientColors.primaryAppColor)
+										.animation(.easeInOut(duration: 0.2), value: timerViewModel.isRunning)
+								}
+								.disabled(timerViewModel.isRunning)
+								.padding(.leading, 20)
+								
+								Spacer()
+								SortMenuView<CardSortOrder>(
+									sortOrder: $deckViewModel.cardSortOrder,
+									paddingSize: 8,
+									fontSize: 10,
+									menuImageName: "arrow.up.arrow.down"
+								)
+								Button {
+									activeModal = .settings
+									print("Settings button was pressed")
+									withAnimation(.easeInOut(duration: 0.6)) {
+										rotationAngle += 120
+									}
+									
+									
+								} label: {
+									Image(systemName: "gear")
+										.font(.system(size: 25))
+										.foregroundStyle(timerViewModel.isRunning ? GradientColors.gray : GradientColors.primaryAppColor)
+										.rotationEffect(.degrees(Double(rotationAngle)))
+										.animation(.easeInOut(duration: 0.2), value: timerViewModel.isRunning)
+								}
+								.disabled(timerViewModel.isRunning)
+								.padding(.trailing, 20)
+								//.frame(maxWidth: .infinity, alignment: .trailing)
+							}
+						}
 					}
 					
 					ScrollView {
-						// Deck-picker-en øverst i viewet
-						if deckSelectionViewModel.selectedDeckID != nil && prizeCheckViewModel.deckState.cardsInHand.isEmpty {
-							HStack(spacing: 2) {
-								Text("Current Deck:")
-									.fontWeight(.semibold)
-									.fontDesign(.rounded)
-								CustomPickerMenuView(decks: decks)
-									.disabled(timerViewModel.isRunning && !prizeCheckViewModel.deckState.cardsInHand.isEmpty)
-							}
-							.padding(.vertical, 5)
-							.frame(maxWidth: .infinity)
-							.overlay(alignment: .trailing) {
-								SortMenuView(deckViewModel: deckViewModel, paddingSize: 8, fontSize: 10)
-									.padding(.horizontal, 15)
-							}
-						}
 						
 						//"Hoveddelen av viewet hvor de tre radene med kort er.
 						if !prizeCheckViewModel.deckState.cardsInHand.isEmpty {
@@ -245,7 +284,7 @@ struct PrizeCheckView: View {
 										.font(.title)
 										.foregroundStyle(GradientColors.primaryAppColor)
 								}
-								.disabled(timerViewModel.isRunning)
+								//.disabled(timerViewModel.isRunning)
 								.padding(.trailing, 20)
 								.frame(maxWidth: .infinity, alignment: .trailing)
 							}

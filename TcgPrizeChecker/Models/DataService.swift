@@ -25,8 +25,8 @@ struct DataService {
 //	}
 	
 	
-	func fetchDetailedCard(cardId: String) async throws -> Card {
-		let urlString = "https://api.tcgdex.net/v2/en/cards/\(cardId)"
+	func fetchDetailedCard(cardID: String) async throws -> Card {
+		let urlString = "https://api.tcgdex.net/v2/en/cards/\(cardID)"
 		print("We're in the fetch function in DataService, url: \(urlString)")
 		return try await fetchData(from: urlString, as: Card.self)
 	}

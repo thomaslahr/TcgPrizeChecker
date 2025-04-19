@@ -7,22 +7,26 @@
 
 import SwiftUI
 
-struct SortMenuView: View {
-	
-	@ObservedObject var deckViewModel: DeckViewModel
+struct SortMenuView<SortType>: View where
+SortType: CaseIterable & RawRepresentable & Equatable & Identifiable,
+SortType.RawValue == String
+{
+
+	@Binding var sortOrder: SortType
 	let paddingSize: CGFloat
 	let fontSize: CGFloat
+	let menuImageName: String
 	
-    var body: some View {
+	var body: some View {
 		Menu {
-			ForEach(CardSortOrder.allCases) { sort in
+			ForEach(Array(SortType.allCases)) { sort in
 				HStack{
 					Button {
-						deckViewModel.cardSortOrder = sort
+						sortOrder = sort
 					} label: {
 						HStack {
 							Text(sort.rawValue)
-							if sort == deckViewModel.cardSortOrder {
+							if sort == sortOrder {
 								Spacer()
 								Image(systemName: "checkmark")
 							}
@@ -31,7 +35,7 @@ struct SortMenuView: View {
 				}
 			}
 		} label: {
-				Image(systemName: "arrow.up.arrow.down")
+				Image(systemName: menuImageName)
 				.font(.system(size: fontSize))
 				.accessibilityLabel("Sort Cards")
 				.foregroundStyle(.white)
@@ -41,9 +45,51 @@ struct SortMenuView: View {
 							.fill(GradientColors.primaryAppColor)
 					}
 		}
-    }
+	}
 }
 
-#Preview {
-	SortMenuView(deckViewModel: DeckViewModel(imageCache: ImageCacheViewModel()), paddingSize: 8, fontSize: 10)
-}
+//struct SortMenuView: View {
+//	
+//	@ObservedObject var deckViewModel: DeckViewModel
+//	let paddingSize: CGFloat
+//	let fontSize: CGFloat
+//	
+//    var body: some View {
+//		Menu {
+//			ForEach(CardSortOrder.allCases) { sort in
+//				HStack{
+//					Button {
+//						deckViewModel.cardSortOrder = sort
+//					} label: {
+//						HStack {
+//							Text(sort.rawValue)
+//							if sort == deckViewModel.cardSortOrder {
+//								Spacer()
+//								Image(systemName: "checkmark")
+//							}
+//						}
+//					}
+//				}
+//			}
+//		} label: {
+//				Image(systemName: "arrow.up.arrow.down")
+//				.font(.system(size: fontSize))
+//				.accessibilityLabel("Sort Cards")
+//				.foregroundStyle(.white)
+//				.padding(paddingSize)
+//					.background {
+//						RoundedRectangle(cornerRadius: 8)
+//							.fill(GradientColors.primaryAppColor)
+//					}
+//		}
+//    }
+//}
+
+//#Preview {
+//	SortMenuView<SortType: CaseIterable & Equatable & Identifiable & RawRepresentable, ViewModel>(
+//		
+//		paddingSize: 8,
+//		fontSize: 10,
+//		menuImageName: "arrow.up.arrow.down"
+//	)
+//}
