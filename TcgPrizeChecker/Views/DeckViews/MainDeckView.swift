@@ -292,6 +292,7 @@ private struct UIState {
 enum CardSortOrder: String, Identifiable, Hashable, CaseIterable {
 	case dateAdded = "Date Added"
 	case alphabetical = "Alphabetical"
+	case standard = "Standard"
 	
 	var id: Self { self }
 }

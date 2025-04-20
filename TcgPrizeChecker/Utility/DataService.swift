@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct DataService {
-	@Environment(\.modelContext) private var modelContext
+	//@Environment(\.modelContext) private var modelContext
 	
 	private func fetchData<T: Decodable>(from urlString: String, as type: T.Type) async throws -> T {
 		guard let url = URL(string: urlString) else {
@@ -43,42 +43,6 @@ struct DataService {
 		}
 		let (data, _) = try await URLSession.shared.data(from: url)
 		return data
-	}
-	
-	func saveImageToSwiftDataDS(modelContext: ModelContext, imageData: Data, id: String, localId: String, name: String, cardToSave: String, deckName: String, selectedDeckID: String, selectedDeck: Deck, category: String) {
-			do {
-				if cardToSave == "Deck" {
-					let storedCard = PersistentCard(
-						imageData: imageData ,
-						id: id,
-						localId: localId,
-						name: name,
-						uniqueId: UUID().uuidString,
-						category: category
-						
-					)
-					selectedDeck.cards.append(storedCard)
-					modelContext.insert(storedCard)
-					try modelContext.save()
-					print("Card successfully saved to SwiftData with a deck name of \(deckName). (Not saved to a deck object.)")
-					print("ID: \(selectedDeckID)")
-				} else {
-					let storedCard = PlayableCard(
-						imageData: imageData,
-						id: id,
-						localId: localId,
-						name: name,
-						uniqueId: UUID().uuidString,
-						category: category
-					)
-					modelContext.insert(storedCard)
-					try modelContext.save()
-					print("Card successfully saved to SwiftData as a Playable Card.")
-					
-				}
-			} catch {
-				print("Error saving the card to SwiftData: \(error.localizedDescription)")
-			}
 	}
 }
 

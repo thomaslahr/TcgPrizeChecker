@@ -11,5 +11,7 @@ enum Category: String, Decodable {
 	case pokemon = "Pokemon"
 	case trainer = "Trainer"
 	case energy = "Energy"
+	case unknown
+
 }
 

@@ -19,6 +19,10 @@ struct Card: Decodable, Hashable, Identifiable {
 //	var category: Category?
 	var rarity: String?
 	var category: String?
+	var trainerType: String?
+	var stage: String?
+	var evolveFrom: String?
+//	var types: [String?]
 //	let regulationMark: String?
 	
 	//Dette er (ment til å være) instansieringen av CardSet-modellen som allerede er her. Den under er en ny versjon.
@@ -60,7 +64,8 @@ extension Card {
 		image: "https://assets.tcgdex.net/en/sv/sv01/245",
 		id: "sv01-245",
 		localId: "245",
-		name: "Gardevoir ex"
+		name: "Gardevoir ex",
+//		types: ["Psychic"]
 //		regulationMark: "G",
 //		hp: 310,
 //		types: [],

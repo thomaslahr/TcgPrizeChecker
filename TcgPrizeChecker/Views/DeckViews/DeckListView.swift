@@ -35,7 +35,22 @@ struct DeckListView: View {
 							Text(card.name)
 								.fontWeight(.bold)
 								.font(.system(size: 18))
-							Text(card.category ?? "Not defined")
+							
+							HStack(spacing: 3) {
+								if let category = card.category {
+									Text("\(category)")
+								}
+								if let trainerType = card.trainerType {
+									Text("(\(trainerType))")
+										.font(.system(size: 12))
+								}
+								
+								if let stage = card.stage {
+									Text("(\(stage))")
+										.font(.system(size: 12))
+								}
+							}
+							.font(.system(size: 14))
 							if let cardSetName = CardSetName.fromCardSetID(card.id) {
 								Text("(\(cardSetName.rawValue))")
 									.font(.system(size: 13))

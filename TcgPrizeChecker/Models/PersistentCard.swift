@@ -21,6 +21,10 @@ class PersistentCard {
 	
 	var dateAdded = Date()
 	var category: String?
+	var trainerType: String?
+	var stage: String?
+	var evolveFrom: String?
+	//var types: [String?]
 	
 	init(
 		imageData: Data,
@@ -28,7 +32,11 @@ class PersistentCard {
 		localId: String,
 		name: String,
 		uniqueId: String,
-		category: String
+		category: String?,
+		trainerType: String?,
+		stage: String?,
+		evolveFrom: String?
+		//types: [String?]
 	) {
 		self.imageData = imageData
 		self.id = id
@@ -36,6 +44,10 @@ class PersistentCard {
 		self.name = name
 		self.uniqueId = uniqueId
 		self.category = category
+		self.trainerType = trainerType
+		self.stage = stage
+		self.evolveFrom = evolveFrom
+		//self.types = types
 	}
 	
 	enum CodingKeys: String, CodingKey {
@@ -56,15 +68,6 @@ class PersistentCard {
 
 extension PersistentCard {
 	static let sampleDeck: [PersistentCard] = [
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
-		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy"),
+		PersistentCard(imageData: UIImage(named: "psychicEnergy")?.pngData() ?? Data(), id: "", localId: "", name: "Card", uniqueId: UUID().uuidString, category: "Energy", trainerType: "Supporter", stage: nil, evolveFrom: nil)
 	]
 }
