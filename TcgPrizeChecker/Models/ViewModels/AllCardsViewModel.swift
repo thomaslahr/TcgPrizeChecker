@@ -63,7 +63,6 @@ class AllCardsViewModel: ObservableObject {
 			let trainerType = detailedCard.trainerType
 			let stage = detailedCard.stage
 			let evolveFrom = detailedCard.evolveFrom
-		//	let types = detailedCard.types
 			
 			switch info.cardToSave {
 			case .deck:
@@ -77,7 +76,6 @@ class AllCardsViewModel: ObservableObject {
 						trainerType: trainerType,
 						stage: stage,
 						evolveFrom: evolveFrom
-						//types: types
 						
 					)
 					info.selectedDeck.cards.append(storedCard)
@@ -93,7 +91,6 @@ class AllCardsViewModel: ObservableObject {
 						trainerType: trainerType,
 						stage: stage,
 						evolveFrom: evolveFrom
-						//types: types
 					)
 					modelContext.insert(storedCard)
 			}

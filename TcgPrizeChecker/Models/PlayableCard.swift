@@ -23,7 +23,6 @@ class PlayableCard {
 	var trainerType: String?
 	var stage: String?
 	var evolveFrom: String?
-	//var types: [String?]
 	
 	init(
 		imageData: Data,
@@ -34,8 +33,7 @@ class PlayableCard {
 		category: String?,
 		trainerType: String?,
 		stage: String?,
-		evolveFrom: String?
-		//types: [String?]
+		evolveFrom: String?,
 	) {
 		self.imageData = imageData
 		self.id = id
@@ -46,7 +44,6 @@ class PlayableCard {
 		self.trainerType = trainerType
 		self.stage = stage
 		self.evolveFrom = evolveFrom
-	//	self.types = types
 	}
 	
 	enum CodingKeys: String, CodingKey {

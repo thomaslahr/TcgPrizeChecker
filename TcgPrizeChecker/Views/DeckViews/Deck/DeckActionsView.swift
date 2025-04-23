@@ -15,7 +15,9 @@ struct DeckActionsView: View {
 	@Binding var isShowingMessage: Bool
 	@Binding var deleteDeck: Bool
 	@Binding var activeModal: DeckModal?
-    var body: some View {
+	@State private var waveBounce = false
+	
+	var body: some View {
 		ZStack {
 			HStack {
 				Button {
@@ -48,7 +50,12 @@ struct DeckActionsView: View {
 							.fontDesign(.rounded)
 							.fontWeight(.semibold)
 					}
-						.frame(maxWidth: .infinity, alignment: .center)
+					.offset(x: waveBounce ? -15 : 0)
+					.animation(.easeInOut(duration: 0.5), value: waveBounce)
+					.frame(maxWidth: .infinity, alignment: .center)
+					.onAppear {
+						startWaveAnimationLoop()
+					}
 				}
 			}
 			HStack {
@@ -76,12 +83,22 @@ struct DeckActionsView: View {
 			.frame(maxWidth: .infinity, alignment: .trailing)
 			.padding(.trailing, 15)
 		}
-    }
-		private func showMessage() {
+	}
+	private func showMessage() {
 		isShowingMessage = true
 		DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
 			withAnimation {
 				isShowingMessage = false
+			}
+		}
+	}
+	
+	private func startWaveAnimationLoop() {
+		Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+			withAnimation {
+				if activeModal != .create {
+					waveBounce.toggle()
+				}
 			}
 		}
 	}

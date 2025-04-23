@@ -39,7 +39,6 @@ struct MainDeckView: View {
 		NavigationStack {
 			VStack {
 				HStack{
-					
 					ZStack {
 						if !isInputActive && searchViewModel.searchText.isEmpty {
 							Image(systemName: "magnifyingglass")
@@ -80,10 +79,6 @@ struct MainDeckView: View {
 							}
 						
 					}
-					//					.onChange(of: searchViewModel.searchText) { oldValue, newValue in
-					//						searchViewModel.debounceSearch(query: newValue, allCards: allCardsViewModel.cards)
-					//						//handleSearch(newValue)
-					//					}
 					.onChange(of: allCardsViewModel.cards) { _, newCards in
 						searchViewModel.updateAllCards(newCards)
 					}
@@ -140,7 +135,10 @@ struct MainDeckView: View {
 						activeModal: $activeModal,
 						deckViewModel: deckViewModel
 					)
-					if uiState.viewSelection == 1 {
+					if decks.count == 0 {
+						Color.clear
+					}
+					if uiState.viewSelection == 1 && !decks.isEmpty {
 						ViewDescriptionTextView(text: "Tap on a card to enlarge, hold to delete it.")
 					}
 					switch uiState.viewSelection {

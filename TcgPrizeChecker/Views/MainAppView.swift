@@ -39,34 +39,44 @@ struct MainAppView: View {
 	@StateObject private var imageCache = ImageCacheViewModel()
 	@StateObject var deckViewModel: DeckViewModel
 	
+	@State private var isLaunchingForTheFirstTime = true
+	
 	init() {
 			let cache = ImageCacheViewModel()
 			_imageCache = StateObject(wrappedValue: cache)
 			_deckViewModel = StateObject(wrappedValue: DeckViewModel(imageCache: cache))
 		}
 	var body: some View {
-		TabView {
-			MainDeckView(imageCache: imageCache, deckViewModel: deckViewModel)
-			//Can be removed if not deployed for iOS17 and below
-				//.environmentObject(deckSelectionViewModel)
-				.tabItem {
-					Label("Deck", systemImage: "rectangle.on.rectangle.square.fill")
-				}
+		if isLaunchingForTheFirstTime {
+			MainOnboardingView(isLaunchingForTheFirstTime: $isLaunchingForTheFirstTime)
+				.transition(.move(edge: .top).combined(with: .opacity))
+			
+		} else {
+			TabView {
+				MainDeckView(imageCache: imageCache, deckViewModel: deckViewModel)
+				//Can be removed if not deployed for iOS17 and below
+					//.environmentObject(deckSelectionViewModel)
+					.tabItem {
+						Label("Deck", systemImage: "rectangle.on.rectangle.square.fill")
+					}
 
-			PrizeCheckView(imageCache: imageCache, deckViewModel: deckViewModel)
-			//	.environmentObject(deckSelectionViewModel)
-				.tabItem {
-					Label("Prize Checker", systemImage: "gift.circle")
-				}
+				PrizeCheckView(imageCache: imageCache, deckViewModel: deckViewModel)
+				//	.environmentObject(deckSelectionViewModel)
+					.tabItem {
+						Label("Prize Checker", systemImage: "gift.circle")
+					}
 
-//            CardSeriesView()
-//                .tabItem {
-//                    Label("Cards", systemImage: "plus")
-//                }
+	//            CardSeriesView()
+	//                .tabItem {
+	//                    Label("Cards", systemImage: "plus")
+	//                }
+			}
+			.transition(.opacity)
 		}
 	}
 }
 
 #Preview {
     MainAppView()
+		.environmentObject(DeckSelectionViewModel())
 }
