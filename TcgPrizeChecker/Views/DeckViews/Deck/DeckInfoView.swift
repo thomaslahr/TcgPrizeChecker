@@ -2,76 +2,131 @@
 //  DeckInfoView.swift
 //  TcgPrizeChecker
 //
-//  Created by Thomas Lahr on 07/04/2025.
+//  Created by Thomas Lahr on 28/04/2025.
 //
 
 import SwiftUI
 import SwiftData
+
 struct DeckInfoView: View {
-	@Binding var viewSelection: Int
-	@Query private var decks: [Deck]
-	//@Binding var selectedDeck: Deck?
-	var selectedDeckID: String?
-	@Binding var activeModal: DeckModal?
-	@ObservedObject var deckViewModel: DeckViewModel
 	
-	private var selectedDeck: Deck? {
-		decks.first(where: {$0.id == selectedDeckID})
-	}
-    var body: some View {
-		Picker(selection: $viewSelection) {
-			Text("List View").tag(0)
-			Text("Grid View").tag(1)
-		} label: {
-			Text("Change View Type")
-		}
-		.pickerStyle(.segmented)
+	let selectedDeck: Deck?
+	
+	let energyTypes = EnergyType.allCases
+	
+
+
+	
+	var body: some View {
 		
-		HStack {
+		if let selectedDeck {
+			let allPokemonCards = selectedDeck.cards.filter { $0.category == "Pokemon"}
+			let allTrainerCards = selectedDeck.cards.filter { $0.category == "Trainer"}
 			
-			// En enkel count for å holde styr på antall kort i decket.
-			if let selectedDeck {
-				WarningTextView(text: "There are \(selectedDeck.cards.count) cards in the deck.", changeColor: selectedDeck.cards.count > 60)
+			let basicCards = selectedDeck.cards.filter { $0.stage == "Basic"}
+			let stage1Cards = selectedDeck.cards.filter { $0.stage == "Stage1"}
+			let stage2Cards = selectedDeck.cards.filter { $0.stage == "Stage2"}
+			let supporterCards = selectedDeck.cards.filter { $0.trainerType == "Supporter" }
+			let itemCards = selectedDeck.cards.filter { $0.trainerType == "Item" }
+			let toolCards = selectedDeck.cards.filter { $0.trainerType == "Tool" }
+			let stadiumCards = selectedDeck.cards.filter { $0.trainerType == "Stadium" }
+			
+			
+			let allEnergyCards = selectedDeck.cards.filter {$0.category == "Energy"}
+			let basicEnergyCards = selectedDeck.cards.filter { card in
+				card.category == "Energy" && energyTypes.contains(where: {
+					card.name.contains($0.rawValue)
+				})
 			}
-			Spacer()
-			HStack(spacing: 5){
-				SortMenuView<CardSortOrder>(
-					sortOrder: $deckViewModel.cardSortOrder,
-					paddingSize: 11.5,
-					fontSize: 17,
-					menuImageName: "arrow.up.arrow.down"
-				)
+			
+			var specialEnergyCards: Int {
+				allEnergyCards.count - basicEnergyCards.count
+			}
+			
+			ScrollView {
+				Text("Deck Stats")
+					.font(.title)
+					.fontWeight(.bold)
+					.fontDesign(.rounded)
+					.padding(.top, 10)
 				
-				Button {
-					activeModal = .playable
-				} label: {
-						Image(systemName: "tray.2")
-						.foregroundStyle(.white)
-						.padding(10)
-							.background {
-								RoundedRectangle(cornerRadius: 8)
-									.fill(GradientColors.primaryAppColor)
-							}
+				VStack(spacing: 3) {
+					Text("Number of Pokémon in the deck: \(allPokemonCards.count)")
+						.font(.subheadline)
+						.fontWeight(.bold)
+						.fontDesign(.rounded)
+					
+					VStack(alignment: .leading) {
+						ViewDescriptionTextView(text:"\(basicCards.count) Basic Pokémon in the deck")
+						ViewDescriptionTextView(text:"\(stage1Cards.count) Stage1 Pokémon in the deck")
+						ViewDescriptionTextView(text:"\(stage2Cards.count) Stage2 Pokémon in the deck")
+					}
+					.padding()
+					.frame(maxWidth: .infinity, alignment: .leading)
+					.background {
+						RoundedRectangle(cornerRadius: 12)
+							.fill(.thinMaterial)
+						
+					}
 				}
-				.accessibilityLabel("Show playable cards")
-				.disabled(decks.isEmpty)
+				.padding(.vertical, 5)
+					VStack(spacing: 3) {
+						Text("Number of Trainers in the deck: \(allTrainerCards.count)")
+							.font(.subheadline)
+							.fontWeight(.bold)
+							.fontDesign(.rounded)
+						
+						VStack(alignment: .leading) {
+							ViewDescriptionTextView(text: "\(supporterCards.count) Supporter Cards")
+							ViewDescriptionTextView(text: "\(itemCards.count) Item Cards")
+							ViewDescriptionTextView(text: "\(toolCards.count) Tool Cards")
+							ViewDescriptionTextView(text: "\(stadiumCards.count) Stadium Cards")
+						}
+						.padding()
+						.frame(maxWidth: .infinity, alignment: .leading)
+						.background {
+							RoundedRectangle(cornerRadius: 12)
+								.fill(.thinMaterial)
+							
+						}
+					}
+					.padding(.vertical, 5)
+					
+					VStack(spacing: 3) {
+						Text("Number of Energy in the deck: \(allEnergyCards.count)")
+							.font(.subheadline)
+							.fontWeight(.bold)
+							.fontDesign(.rounded)
+						
+						VStack(alignment: .leading) {
+							ViewDescriptionTextView(text: "\(basicEnergyCards.count) Basic Energy Cards")
+							ViewDescriptionTextView(text: "\(specialEnergyCards) Special Energy Cards")
+						}
+						.padding()
+						.frame(maxWidth: .infinity, alignment: .leading)
+						.background {
+							RoundedRectangle(cornerRadius: 12)
+								.fill(.thinMaterial)
+							
+						}
+					}
+					.padding(.vertical, 5)
+				
+				ProbabilityView(
+					supporterCards: supporterCards.count,
+					basicPokemonCards: basicCards.count
+				)
 			}
-	
+			.padding(.horizontal, 10)
 		}
-		.padding(.top, 10)
-		.padding([.bottom, .horizontal], 10)
+		
+	}
 	
-    }
+	
 }
 
 #Preview {
-	DeckInfoView(
-		viewSelection: 
-				.constant(0),
-		activeModal: 
-				.constant(.none),
-		deckViewModel: DeckViewModel(
-			imageCache: ImageCacheViewModel()
-		)
-	)
+	DeckInfoView(selectedDeck: Deck.sampleDeck)
+		.background(.red.opacity(0.3))
+		.frame(maxHeight: 400)
 }

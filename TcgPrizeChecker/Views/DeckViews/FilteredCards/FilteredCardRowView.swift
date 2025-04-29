@@ -46,7 +46,6 @@ struct FilteredCardRowView: View {
 			
 			Spacer()
 			
-			if showImage {
 				CachedImageView(urlString: "\(card.image ?? "")/low.webp")
 					.frame(maxWidth: 60)
 					.onAppear {
@@ -59,7 +58,9 @@ struct FilteredCardRowView: View {
 						}
 					}
 					.padding(.trailing, 10)
-			}
+					.opacity(showImage ? 1 : 0)
+					.animation(.easeInOut(duration: 0.2), value: showImage)
+		
 			DoubleButtonView(
 				allCardsViewModel: allCardsViewModel,
 				isButtonDisabled: $isButtonDisabled,

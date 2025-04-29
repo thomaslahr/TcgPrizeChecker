@@ -30,6 +30,7 @@ struct DeckGridView: View {
 	
 	//@Binding var isOverlayActive: Bool
 	
+	@State private var deleteCardHapticTrigger = false
 	var body: some View {
 		ZStack {
 			ScrollView {
@@ -60,7 +61,9 @@ struct DeckGridView: View {
 											}
 											.onLongPressGesture {
 												deleteCard(card)
+												deleteCardHapticTrigger.toggle()
 											}
+											.addCardHapticFeedback(trigger: deleteCardHapticTrigger)
 									} else if let image = UIImage(data: card.imageData) {
 										let targetSize = CGSize(width: 140, height: 200)
 										if let downscaled = image.downscaled(to: targetSize) {

@@ -15,56 +15,62 @@ struct AddPlayableView: View {
 	@Query private var playableCards: [PlayableCard]
 	
 	@State private var isLongPress = false
-
+	
 	@State private var imageCache: [String: UIImage] = [:]  // 🔹 Image cache
 	let columns =  [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
 	let selectedDeck: Deck?
 	let cardsInDeck: [PersistentCard]
+	@State private var hapticFeedbackAdd = false
+	@State private var hapticFeedBackDelete = false
 	
 	var body: some View {
 		VStack {
-			VStack {
-				Text("Tap on a card to add it to a deck.")
-				Text("(Hold to delete it as a Playable card.")
-			}
+				ViewDescriptionTextView(text: playableCards.isEmpty ? "You haven't added any Playable cards yet." : "Tap on a card to add it to a deck.\n (Hold to delete it as a Playable card.")
+			
 			.fontWeight(.semibold)
 			.fontDesign(.rounded)
 			.padding(.bottom, 10)
-				
+			
 			ScrollView {
 				LazyVGrid(columns: columns) {
 					ForEach(playableCards, id: \.uniqueId) { card in
-							if let cachedImage = imageCache[card.uniqueId] {
-								Image(uiImage: cachedImage)
-									.resizable()
-									.aspectRatio(contentMode: .fit)
-									.frame(maxWidth: 110)
-									.onTapGesture {
-										let copiesOfCard = cardsInDeck.filter { $0.id == card.id }.count
-										
-										if copiesOfCard >= 4 {
-											messageManager.messageContent = "You can't have more than 4 copies of a card in deck."
-											messageManager.showMessage()
-											return
-										}
-										addCardToDeck(card)
+						if let cachedImage = imageCache[card.uniqueId] {
+							Image(uiImage: cachedImage)
+								.resizable()
+								.aspectRatio(contentMode: .fit)
+								.frame(maxWidth: 110)
+								.onTapGesture {
+									hapticFeedbackAdd.toggle()
+									let copiesOfCard = cardsInDeck.filter { $0.id == card.id }.count
+									
+									if copiesOfCard >= 4 {
+										messageManager.messageContent = "You can't have more than 4 copies of a card in deck."
+										messageManager.showMessage()
+										return
 									}
-									.onLongPressGesture {
-													deleteCard(card)  // 🔹 Long press now only deletes
-												}
-							} else if let uiImage = UIImage(data: card.imageData) {
-								Image(uiImage: uiImage)
-									.resizable()
-									.aspectRatio(contentMode: .fit)
-									.frame(maxWidth: 110)
-									.onTapGesture(perform: {
-										addCardToDeck(card)
-									})
-									.onAppear { imageCache[card.uniqueId] = uiImage }
-									.onLongPressGesture {
-													deleteCard(card)  // 🔹 Long press now only deletes
-												}
-							}
+									addCardToDeck(card)
+								}
+								.onLongPressGesture {
+									deleteCard(card)  // 🔹 Long press now only deletes
+								}
+								.addCardHapticFeedback(trigger: hapticFeedbackAdd)
+						} else if let uiImage = UIImage(data: card.imageData) {
+							Image(uiImage: uiImage)
+								.resizable()
+								.aspectRatio(contentMode: .fit)
+								.frame(maxWidth: 110)
+								.onTapGesture(perform: {
+									hapticFeedbackAdd.toggle()
+									addCardToDeck(card)
+								})
+								.onAppear { imageCache[card.uniqueId] = uiImage }
+								.onLongPressGesture {
+									hapticFeedBackDelete.toggle()
+									deleteCard(card)  // 🔹 Long press now only deletes
+								}
+								.addCardHapticFeedback(trigger: hapticFeedbackAdd)
+								.deleteCardHapticFeedback(trigger: hapticFeedBackDelete)
+						}
 						
 					}
 				}
@@ -78,10 +84,29 @@ struct AddPlayableView: View {
 					.shadow(radius: 5)
 			}
 		}
+		.overlay {
+			if playableCards.isEmpty {
+				HStack {
+					ZStack {
+						Circle().foregroundStyle(GradientColors.primaryAppColor)
+							.frame(width: 40)
+						Image(systemName: "tray.2").foregroundStyle(.white)
+							.background {
+							}
+					}
+					ViewDescriptionTextView(text: "Tap this button when searching for cards\nif you want to store it as a Playable card.")
+				}
+				.padding()
+				.background {
+					RoundedRectangle(cornerRadius: 12)
+						.fill(.thinMaterial)
+				}
+			}
+		}
 		.padding(.horizontal, 10)
 		.padding(.vertical, 20)
 	}
-
+	
 	private func addCardToDeck(_ card: PlayableCard) {
 		let copiesOfCard = cardsInDeck.filter { $0.id == card.id }.count
 		
@@ -106,7 +131,7 @@ struct AddPlayableView: View {
 		messageManager.messageContent = "\(card.name) was added to the \(selectedDeck.name) deck. (\(copiesOfCard + 1)/4)"
 		messageManager.showMessage()
 	}
-
+	
 	private func deleteCard(_ card: PlayableCard) {
 		withAnimation {
 			messageManager.messageContent = "\(card.name) was deleted as a playable card."
@@ -116,7 +141,7 @@ struct AddPlayableView: View {
 		}
 	}
 	
-
+	
 }
 
 

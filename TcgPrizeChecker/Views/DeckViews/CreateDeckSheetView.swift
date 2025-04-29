@@ -16,6 +16,7 @@ struct CreateDeckSheetView: View {
 	@State private var textFieldBorderColor: Color = .blue
 	var onDeckCreated: (Deck) -> Void
 
+	@State private var addCardHapticFeedback = false
 	var body: some View {
 		let numberOfLetters = userInput.count
 		
@@ -48,6 +49,7 @@ struct CreateDeckSheetView: View {
 					.padding(.top, 10)
 			
 			Button {
+				addCardHapticFeedback.toggle()
 				let newDeck = Deck(name: userInput)
 				modelContext.insert(newDeck)
 				try? modelContext.save()
@@ -64,6 +66,7 @@ struct CreateDeckSheetView: View {
 			}
 			
 			.disabled(userInput.isEmpty || userInput.count > 15)
+			.addCardHapticFeedback(trigger: addCardHapticFeedback)
 		}
 		.onChange(of: userInput) {
 			let newColor: Color = numberOfLetters > 15 ? .red : .blue

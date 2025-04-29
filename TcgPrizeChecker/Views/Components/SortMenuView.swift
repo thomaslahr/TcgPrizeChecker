@@ -17,6 +17,8 @@ SortType.RawValue == String
 	let fontSize: CGFloat
 	let menuImageName: String
 	
+	@State private var sortHapticFeedback = false
+	
 	var body: some View {
 		Menu {
 			ForEach(Array(SortType.allCases)) { sort in
@@ -45,6 +47,10 @@ SortType.RawValue == String
 							.fill(GradientColors.primaryAppColor)
 					}
 		}
+		.onChange(of: sortOrder) {
+			sortHapticFeedback.toggle()
+		}
+		.addCardHapticFeedback(trigger: sortHapticFeedback)
 	}
 }
 

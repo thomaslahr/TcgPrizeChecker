@@ -9,6 +9,8 @@ import SwiftUI
 
 struct CustomPickerMenuView: View {
 	@EnvironmentObject var deckSelectionViewModel: DeckSelectionViewModel
+	@State private var deckChoiceHaptic = false
+	
 	let decks: [Deck]
     var body: some View {
 		HStack(spacing: 0) {
@@ -31,6 +33,10 @@ struct CustomPickerMenuView: View {
 				//	Image(systemName: "arrow.up.and.down")
 				}
 			}
+			.onChange(of: deckSelectionViewModel.selectedDeckID) {
+				deckChoiceHaptic.toggle()
+			}
+			.addCardHapticFeedback(trigger: deckChoiceHaptic)
 		}
     }
 }

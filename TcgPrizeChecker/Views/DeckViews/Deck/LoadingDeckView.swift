@@ -12,15 +12,18 @@ struct LoadingDeckView: View {
 	let deckViewModel: DeckViewModel?
 	
     var body: some View {
-		if let deck = selectedDeck,
-		   let viewModel = deckViewModel,
-		   viewModel.isDeckCached(deck) {
-				Color.black
-					.frame(maxWidth: .infinity, maxHeight: .infinity)
-			} else {
-				ProgressView("Loading deck...")
-					.frame(maxWidth: .infinity, maxHeight: .infinity)
-			}
+		Group {
+			if let deck = selectedDeck,
+			   let viewModel = deckViewModel,
+			   viewModel.isDeckCached(deck) {
+					Color.clear
+						.frame(maxWidth: .infinity, maxHeight: .infinity)
+				} else {
+					ProgressView("Loading deck...")
+						.frame(maxWidth: .infinity, maxHeight: .infinity)
+				}
+		}
+		.background(.white.opacity(0.01))
     }
 }
 

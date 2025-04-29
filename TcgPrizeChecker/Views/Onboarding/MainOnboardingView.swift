@@ -60,6 +60,10 @@ struct MainOnboardingView: View {
 						.padding()
 						.opacity(currentPage != 0 ? 1 : 0)
 						.animation(.easeInOut(duration: 0.3), value: currentPage)
+					
+					Button("Debug button") {
+						isLaunchingForTheFirstTime = false
+					}
 				}
 			}
 			.clipShape(RoundedRectangle(cornerRadius: 25))

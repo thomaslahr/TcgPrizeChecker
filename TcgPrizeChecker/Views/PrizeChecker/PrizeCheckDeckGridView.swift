@@ -44,6 +44,7 @@ struct PrizeCheckDeckGridView: View {
 											.aspectRatio(contentMode: .fit)
 											.frame(maxWidth: 75)
 											.opacity(isRevealed ? 1 : 0)
+											.shadow(radius: 5)
 											.onAppear {
 												if !isRevealed {
 													imageCache.revealCardAtRandom(card)
@@ -57,6 +58,7 @@ struct PrizeCheckDeckGridView: View {
 												.aspectRatio(contentMode: .fit)
 												.frame(maxWidth: 70)
 												.opacity(isRevealed ? 1 : 0)
+												.shadow(radius: 5)
 												.onAppear {
 													if !isRevealed {
 														imageCache.revealCardAtRandom(card)

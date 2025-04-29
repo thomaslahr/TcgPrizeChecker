@@ -167,9 +167,9 @@ struct PrizeCheckView: View {
 							.opacity(timerViewModel.isRunning ? 0 : 1)
 						}
 			
-						if let selectedDeck = selectedDeck, selectedDeck.cards.count < 14 {
-								Text("There isn't enough cards in the deck yet to prize check.")
-							}
+//						if let selectedDeck = selectedDeck, selectedDeck.cards.count < 14 {
+//								Text("There isn't enough cards in the deck yet to prize check.")
+//							}
 					}
 					.scrollDisabled(prizeCheckViewModel.tappedDeck || prizeCheckViewModel.tappedHand)
 					

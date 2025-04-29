@@ -89,6 +89,7 @@ struct FilteredCardsView: View {
 								.padding(.horizontal)
 						}
 					}
+					.padding(.vertical, 10)
 					.padding(.trailing, 13)
 				}
 				.blur(radius: (tappedCard != nil) ? 5 : 0)

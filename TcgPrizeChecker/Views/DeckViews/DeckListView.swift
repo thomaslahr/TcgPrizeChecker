@@ -60,19 +60,19 @@ struct DeckListView: View {
 						Spacer()
 						
 						if let cachedImage = imageCache.cache[card.uniqueId] {
-								let isRevealed = imageCache.revealedCardIDs.contains(card.uniqueId)
-								
-								Image(uiImage: cachedImage)
-									.resizable()
-									.aspectRatio(contentMode: .fit)
-									.frame(maxWidth: 50)
-									.opacity(isRevealed ? 1 : 0)
-									.onAppear {
-										print("Cached image: \(index)")
-										if !isRevealed {
-											imageCache.revealCardInOrder(card, at: index)
-										}
+							let isRevealed = imageCache.revealedCardIDs.contains(card.uniqueId)
+							
+							Image(uiImage: cachedImage)
+								.resizable()
+								.aspectRatio(contentMode: .fit)
+								.frame(maxWidth: 50)
+								.opacity(isRevealed ? 1 : 0)
+								.onAppear {
+									print("Cached image: \(index)")
+									if !isRevealed {
+										imageCache.revealCardInOrder(card, at: index)
 									}
+								}
 						} else {
 							if let uiImage = imageCache.loadImage(for: card) {
 								let isRevealed = imageCache.revealedCardIDs.contains(card.uniqueId)
@@ -89,6 +89,7 @@ struct DeckListView: View {
 									}
 							}						}
 					}
+					
 				}
 				.onDelete { indexSet in
 					indexSet.map { sortedCards[$0] }.forEach { card in

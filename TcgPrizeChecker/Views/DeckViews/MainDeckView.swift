@@ -129,7 +129,7 @@ struct MainDeckView: View {
 						deleteDeck: $uiState.deleteDeck,
 						activeModal: $activeModal
 					)
-					DeckInfoView(
+					DeckChoicesView(
 						viewSelection: $uiState.viewSelection,
 						selectedDeckID: selectedDeck?.id,
 						activeModal: $activeModal,
@@ -138,36 +138,48 @@ struct MainDeckView: View {
 					if decks.count == 0 {
 						Color.clear
 					}
-					if uiState.viewSelection == 1 && !decks.isEmpty {
-						ViewDescriptionTextView(text: "Tap on a card to enlarge, hold to delete it.")
-					}
-					switch uiState.viewSelection {
-					case 0:
-						if deckViewModel.isLoadingDeck {
-							LoadingDeckView(selectedDeck: selectedDeck, deckViewModel: deckViewModel)
-						} else if let id = deckViewModel.lastRenderedDeckID {
-							DeckListView(
-								selectedDeckID: id,
-								deckViewModel: deckViewModel,
-								imageCache: imageCache
-							)
+					if let selectedDeck {
+						if uiState.viewSelection == 1 && selectedDeck.cards.count > 0 {
+							ViewDescriptionTextView(text: "Tap on a card to enlarge, hold to delete it.")
 						}
-						
-					default:
-						if deckViewModel.isLoadingDeck {
-							LoadingDeckView(selectedDeck: selectedDeck, deckViewModel: deckViewModel)
-						} else if let id = deckViewModel.lastRenderedDeckID {
-							ZStack {
-								DeckGridView(
-									imageCache: imageCache,
+					}
+					Group {
+						switch uiState.viewSelection {
+						case 0:
+							if deckViewModel.isLoadingDeck {
+								LoadingDeckView(selectedDeck: selectedDeck, deckViewModel: deckViewModel)
+							} else if let id = deckViewModel.lastRenderedDeckID {
+								DeckListView(
+									selectedDeckID: id,
 									deckViewModel: deckViewModel,
-									selectedDeckID: id
+									imageCache: imageCache
 								)
 							}
-							.transition(.opacity)
-							.animation(.easeInOut(duration: 0.35), value: id)
+							
+						default:
+							if deckViewModel.isLoadingDeck {
+								LoadingDeckView(selectedDeck: selectedDeck, deckViewModel: deckViewModel)
+							} else if let id = deckViewModel.lastRenderedDeckID {
+								ZStack {
+									DeckGridView(
+										imageCache: imageCache,
+										deckViewModel: deckViewModel,
+										selectedDeckID: id
+									)
+								}
+								.transition(.opacity)
+								.animation(.easeInOut(duration: 0.35), value: id)
+							}
 						}
 					}
+					.overlay {
+							if let selectedDeck {
+								if selectedDeck.cards.count == 0 {
+									EmptyDeckOverlayView()
+								}
+							}
+						}
+
 				} else {
 					// deckName er kun for debugging, det trengs ikke for logikken som implementerer decks.
 					let deckName = decks.first(where: {$0.id == deckSelectionViewModel.selectedDeckID})?.name ?? "No deck selected"
@@ -216,7 +228,6 @@ struct MainDeckView: View {
 				
 				
 			}
-			
 			.overlay {
 				MessageView(messageContent: "You can only have 10 decks.")
 					.opacity(uiState.isShowingMessage ? 1 : 0)
@@ -238,6 +249,9 @@ struct MainDeckView: View {
 				.presentationDetents([.medium])
 			case .settings:
 				MainSettingsView()
+					.presentationDetents([.medium])
+			case .info:
+				DeckInfoView(selectedDeck: selectedDeck)
 					.presentationDetents([.medium])
 			}
 		}
@@ -276,6 +290,7 @@ enum DeckModal: Identifiable {
 	case playable
 	case create
 	case settings
+	case info
 	
 	var id: Int { hashValue }
 }

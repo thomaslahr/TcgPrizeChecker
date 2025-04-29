@@ -17,6 +17,8 @@ struct DeckActionsView: View {
 	@Binding var activeModal: DeckModal?
 	@State private var waveBounce = false
 	
+	@State private var deleteDeckHapticFeedback = false
+	
 	var body: some View {
 		ZStack {
 			HStack {
@@ -68,9 +70,11 @@ struct DeckActionsView: View {
 								.font(.title)
 								.foregroundStyle(.red)
 						}
+						.addCardHapticFeedback(trigger: deleteDeckHapticFeedback)
 						.alert("Are you sure you want to delete the deck?", isPresented: $deleteDeck) {
 							Button("Cancel", role: .cancel) { }
 							Button("Yes", role: .destructive) {
+								deleteDeckHapticFeedback.toggle()
 								if let selectedDeck = selectedDeck {
 									modelContext.delete(selectedDeck)
 									try? modelContext.save()

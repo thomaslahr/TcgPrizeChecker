@@ -118,7 +118,7 @@ class AllCardsViewModel: ObservableObject {
 		
 		switch cardSaveType {
 		case .deck:
-			if selectedDeck?.cards.count ?? 0 > 70 {
+			if selectedDeck?.cards.count ?? 0 > 65 {
 				throw ValidationError.deckTooFull(deckName: selectedDeck?.name ?? "")
 			}
 			if copiesOfCardInDeck >= 4 {

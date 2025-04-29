@@ -24,15 +24,33 @@ struct DoubleButtonView: View {
 	@Query var decks: [Deck]
 	@Query var playableCards: [PlayableCard]
 	
-//	@Binding var isShowingMessage: Bool
-//	@Binding var messageContent: String
+	//	@Binding var isShowingMessage: Bool
+	//	@Binding var messageContent: String
 	
+	@State private var hapticTrigger = false
+	@State private var isAddPressed = false
+	@State private var isPlayablePressed = false
 	var body: some View {
 		stack {
 			Button {
-				Task {
-					await addCard(as: .deck)
+				isAddPressed = true
+				
+				DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+					isAddPressed = false
 				}
+				Task {
+						do {
+							let message = try await addCard(as: .deck)
+							// Only trigger animation and haptic if card was successfully added
+							hapticTrigger.toggle()
+							
+							messageManager.messageContent = message
+						} catch {
+							// Show error but no haptic or animation
+							messageManager.messageContent = error.localizedDescription
+						}
+						messageManager.showMessage()
+					}
 			} label: {
 				ZStack {
 					Circle()
@@ -43,11 +61,31 @@ struct DoubleButtonView: View {
 						.foregroundStyle(.white)
 				}
 			}
-	
+			.scaleEffect(isAddPressed ? 1.15 : 1.0)
+			.animation(.spring(duration: 0.2), value: isAddPressed)
+			
+			.addCardHapticFeedback(trigger: hapticTrigger)
+			
 			Button {
-				Task {
-					await addCard(as: .playable)
+				isPlayablePressed = true
+
+				DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+					isPlayablePressed = false
 				}
+				
+				Task {
+						do {
+							let message = try await addCard(as: .playable)
+							// Only trigger animation and haptic if card was successfully added
+							hapticTrigger.toggle()
+						
+							messageManager.messageContent = message
+						} catch {
+							// Show error but no haptic or animation
+							messageManager.messageContent = error.localizedDescription
+						}
+						messageManager.showMessage()
+					}
 			} label: {
 				ZStack {
 					Circle()
@@ -58,6 +96,9 @@ struct DoubleButtonView: View {
 						.foregroundStyle(.white)
 				}
 			}
+			.scaleEffect(isPlayablePressed ? 1.15 : 1.0)
+			.animation(.spring(duration: 0.2), value: isPlayablePressed)
+			.addCardHapticFeedback(trigger: hapticTrigger)
 		}
 	}
 	
@@ -69,12 +110,11 @@ struct DoubleButtonView: View {
 			VStack { content() }
 		}
 	}
-
-	private func addCard(as cardSaveType: CardSaveType) async {
+	
+	private func addCard(as cardSaveType: CardSaveType) async throws -> String {
 		currentCard = card
 		let selectedDeck = decks.first(where: { $0.id == selectedDeckID })
 		
-		do {
 			let message = try await allCardsViewModel.addCardToDeckOrPlayables(
 				card: card,
 				cardSaveType: cardSaveType,
@@ -85,14 +125,8 @@ struct DoubleButtonView: View {
 				playableCards: playableCards,
 				modelContext: modelContext
 			)
-			messageManager.messageContent = message
-		} catch {
-			messageManager.messageContent = error.localizedDescription
-		}
-		
-		messageManager.showMessage()
+		return message
 	}
-
 }
 
 //#Preview {

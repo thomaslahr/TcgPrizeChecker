@@ -12,7 +12,7 @@ struct ViewDescriptionTextView: View {
 		
 		var body: some View {
 			Text(text)
-				.font(.callout)
+				.font(.caption)
 				.fontWeight(.bold)
 		}
 }

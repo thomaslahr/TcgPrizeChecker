@@ -34,12 +34,16 @@ struct PlayableMainView: View {
 						.fontWeight(.bold)
 
 					CustomPickerMenuView(decks: decks)
+						
 					Text("deck")
 						.fontWeight(.bold)
 					}
 			}
 			.padding(.top, 15)
 			.font(.callout)
+			if let selectedDeck {
+				WarningTextView(text: "There are \(selectedDeck.cards.count) cards in the deck.", changeColor: selectedDeck.cards.count > 60)
+			}
 				VStack {
 					Picker(selection: $viewSelection) {
 						Text("Energy Cards").tag(0)
