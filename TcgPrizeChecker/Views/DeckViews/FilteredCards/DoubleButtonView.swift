@@ -30,31 +30,36 @@ struct DoubleButtonView: View {
 	@State private var hapticTrigger = false
 	@State private var isAddPressed = false
 	@State private var isPlayablePressed = false
+	
 	var body: some View {
+		
+		let copiesOfCard = cardsInDeck.filter { $0.id == card.id }.count
 		stack {
 			Button {
-				isAddPressed = true
-				
-				DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-					isAddPressed = false
+				if copiesOfCard < 4 {
+					isAddPressed = true
+					
+					DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+						isAddPressed = false
+					}
 				}
 				Task {
-						do {
-							let message = try await addCard(as: .deck)
-							// Only trigger animation and haptic if card was successfully added
-							hapticTrigger.toggle()
-							
-							messageManager.messageContent = message
-						} catch {
-							// Show error but no haptic or animation
-							messageManager.messageContent = error.localizedDescription
-						}
-						messageManager.showMessage()
+					do {
+						let message = try await addCard(as: .deck)
+						// Only trigger animation and haptic if card was successfully added
+						hapticTrigger.toggle()
+						
+						messageManager.messageContent = message
+					} catch {
+						// Show error but no haptic or animation
+						messageManager.messageContent = error.localizedDescription
 					}
+					messageManager.showMessage()
+				}
 			} label: {
 				ZStack {
 					Circle()
-						.foregroundStyle(isButtonDisabled ? .gray : .blue)
+						.foregroundStyle(copiesOfCard >= 4 || isButtonDisabled ? .gray : .blue)
 						.frame(maxWidth: 40)
 					Label("Add card to deck", systemImage: "plus")
 						.labelStyle(.iconOnly)
@@ -68,24 +73,24 @@ struct DoubleButtonView: View {
 			
 			Button {
 				isPlayablePressed = true
-
+				
 				DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
 					isPlayablePressed = false
 				}
 				
 				Task {
-						do {
-							let message = try await addCard(as: .playable)
-							// Only trigger animation and haptic if card was successfully added
-							hapticTrigger.toggle()
+					do {
+						let message = try await addCard(as: .playable)
+						// Only trigger animation and haptic if card was successfully added
+						hapticTrigger.toggle()
 						
-							messageManager.messageContent = message
-						} catch {
-							// Show error but no haptic or animation
-							messageManager.messageContent = error.localizedDescription
-						}
-						messageManager.showMessage()
+						messageManager.messageContent = message
+					} catch {
+						// Show error but no haptic or animation
+						messageManager.messageContent = error.localizedDescription
 					}
+					messageManager.showMessage()
+				}
 			} label: {
 				ZStack {
 					Circle()
@@ -115,16 +120,16 @@ struct DoubleButtonView: View {
 		currentCard = card
 		let selectedDeck = decks.first(where: { $0.id == selectedDeckID })
 		
-			let message = try await allCardsViewModel.addCardToDeckOrPlayables(
-				card: card,
-				cardSaveType: cardSaveType,
-				selectedDeckID: selectedDeckID,
-				deckName: deckName,
-				selectedDeck: selectedDeck,
-				cardsInDeck: cardsInDeck,
-				playableCards: playableCards,
-				modelContext: modelContext
-			)
+		let message = try await allCardsViewModel.addCardToDeckOrPlayables(
+			card: card,
+			cardSaveType: cardSaveType,
+			selectedDeckID: selectedDeckID,
+			deckName: deckName,
+			selectedDeck: selectedDeck,
+			cardsInDeck: cardsInDeck,
+			playableCards: playableCards,
+			modelContext: modelContext
+		)
 		return message
 	}
 }

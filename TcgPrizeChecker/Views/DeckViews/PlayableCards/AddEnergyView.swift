@@ -25,7 +25,7 @@ struct AddEnergyCardView: View {
 	var body: some View {
 			VStack {
 				VStack {
-					ViewDescriptionTextView(text: "Tap on an enery card \n to add a copy to the deck")
+					ViewDescriptionTextView(text: "Tap on an energy card \n to add a copy to the deck")
 						.multilineTextAlignment(.center)
 				}
 				.fontWeight(.semibold)
@@ -35,36 +35,7 @@ struct AddEnergyCardView: View {
 						LazyVGrid(columns: columns) {
 							ForEach(EnergyType.allCases.filter { $0.energyCardUIImage != nil }, id: \.rawValue) { energyCard in
 								Button {
-									hapticFeedback.toggle()
-									if selectedDeck?.cards.count ?? 0 < 64 {
-										if let image = energyCard.energyCardUIImage,
-										   let imageData = image.pngData() {
-											let newEnergyCard = PersistentCard(
-												imageData: imageData,
-												id: "",
-												localId: "",
-												name: energyCard.name,
-												uniqueId: UUID().uuidString,
-												category: "Energy",
-												trainerType: nil,
-												stage: nil,
-												evolveFrom: nil
-											)
-											if let selectedDeck = selectedDeck {
-												selectedDeck.cards.append(newEnergyCard)
-												modelContext.insert(newEnergyCard)
-												try? modelContext.save()
-												messageManager.messageContent = "A \(energyCard.name) was added to the \(selectedDeck.name) deck."
-											
-												messageManager.showMessage()
-											}
-										}
-										print(energyCard.rawValue)
-									} else {
-										messageManager.messageContent = "There's too many cards in the deck. This card wasn't added."
-										messageManager.showMessage()
-									}
-									
+								addCardToDeck(energyCard)
 								} label: {
 									if let uiImage = energyCard.energyCardUIImage {
 										Image(uiImage: uiImage)
@@ -73,6 +44,7 @@ struct AddEnergyCardView: View {
 											.frame(maxWidth: 110)
 									}
 								}
+								.buttonStyle(.plain)
 								.addCardHapticFeedback(trigger: hapticFeedback)
 								.padding(5)
 							}
@@ -81,12 +53,45 @@ struct AddEnergyCardView: View {
 							MessageView(messageContent: messageManager.messageContent)
 								.opacity(messageManager.isShowingMessage ? 1 : 0)
 						}
-					
 				}
-				
-				
 			}
 			.padding(10)
+	}
+	
+	private func addCardToDeck(_ energyCard: EnergyType) {
+		hapticFeedback.toggle()
+		
+		guard let selectedDeck else { return }
+		
+		if selectedDeck.cards.count >= 65 {
+			messageManager.messageContent = "There's too many cards in the deck. This card wasn't added."
+					messageManager.showMessage()
+					return
+		}
+		
+		guard let image = energyCard.energyCardUIImage,
+			  let imageData = image.pngData() else {
+			return
+		}
+		
+		let newEnergyCard = PersistentCard(
+				imageData: imageData,
+				id: "",
+				localId: "",
+				name: energyCard.name,
+				uniqueId: UUID().uuidString,
+				category: "Energy",
+				trainerType: nil,
+				stage: nil,
+				evolveFrom: nil
+			)
+		
+		selectedDeck.cards.append(newEnergyCard)
+		modelContext.insert(newEnergyCard)
+		try? modelContext.save()
+		
+		messageManager.messageContent = "A \(energyCard.name) was added to the \(selectedDeck.name) deck."
+			messageManager.showMessage()
 	}
 }
 

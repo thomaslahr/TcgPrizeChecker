@@ -11,13 +11,15 @@ import SwiftData
 struct DeckActionsView: View {
 	@Environment(\.modelContext) private var modelContext
 	var decks: [Deck]
-	var selectedDeck: Deck?
+	@Binding var selectedDeck: Deck?
 	@Binding var isShowingMessage: Bool
 	@Binding var deleteDeck: Bool
 	@Binding var activeModal: DeckModal?
 	@State private var waveBounce = false
 	
 	@State private var deleteDeckHapticFeedback = false
+	@State private var isDeckBeingDeleted = false
+	@Binding var showProgressView: Bool
 	
 	var body: some View {
 		ZStack {
@@ -75,9 +77,32 @@ struct DeckActionsView: View {
 							Button("Cancel", role: .cancel) { }
 							Button("Yes", role: .destructive) {
 								deleteDeckHapticFeedback.toggle()
-								if let selectedDeck = selectedDeck {
-									modelContext.delete(selectedDeck)
-									try? modelContext.save()
+								
+								if let deckToRemove = selectedDeck {
+									// Step 1: Immediately show progress view while deleting
+									showProgressView = true
+									
+									// Step 2: Delete deck immediately
+									modelContext.delete(deckToRemove)
+									
+									// Step 3: Save the context asynchronously
+									Task {
+										do {
+											try modelContext.save()
+											
+											// Step 4: Update the UI to reflect the deletion
+											// After saving, update UI elements (like resetting the selectedDeck and deck list)
+											selectedDeck = nil
+											
+											// Step 5: Optionally hide progress view after a short delay
+											DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+												showProgressView = false
+											}
+										} catch {
+											print("Failed to save context: \(error)")
+											showProgressView = false
+										}
+									}
 								}
 							}
 						}
@@ -106,14 +131,21 @@ struct DeckActionsView: View {
 			}
 		}
 	}
+	
+	private func updateSelectedDeckAfterDeletion() {
+		// Set selectedDeck to nil to avoid using a deleted deck
+		selectedDeck = nil
+	}
 }
 
 #Preview {
 	DeckActionsView(
 		decks: [Deck.sampleDeck],
+		selectedDeck: .constant(Deck.sampleDeck),
 		isShowingMessage: .constant(false),
 		deleteDeck: .constant(false),
-		activeModal: .constant(.none)
+		activeModal: .constant(.none),
+		showProgressView: .constant(false)
 	)
 	.modelContainer(for: Deck.self, inMemory: true)
 	.environmentObject(DeckSelectionViewModel())

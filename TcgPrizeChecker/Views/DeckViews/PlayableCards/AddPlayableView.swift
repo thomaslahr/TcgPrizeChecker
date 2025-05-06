@@ -23,6 +23,7 @@ struct AddPlayableView: View {
 	@State private var hapticFeedbackAdd = false
 	@State private var hapticFeedBackDelete = false
 	
+	@State private var tappedCardID: String?
 	var body: some View {
 		VStack {
 				ViewDescriptionTextView(text: playableCards.isEmpty ? "You haven't added any Playable cards yet." : "Tap on a card to add it to a deck.\n (Hold to delete it as a Playable card.")
@@ -34,54 +35,38 @@ struct AddPlayableView: View {
 			ScrollView {
 				LazyVGrid(columns: columns) {
 					ForEach(playableCards, id: \.uniqueId) { card in
-						if let cachedImage = imageCache[card.uniqueId] {
-							Image(uiImage: cachedImage)
-								.resizable()
-								.aspectRatio(contentMode: .fit)
-								.frame(maxWidth: 110)
-								.onTapGesture {
-									hapticFeedbackAdd.toggle()
-									let copiesOfCard = cardsInDeck.filter { $0.id == card.id }.count
-									
-									if copiesOfCard >= 4 {
-										messageManager.messageContent = "You can't have more than 4 copies of a card in deck."
-										messageManager.showMessage()
-										return
-									}
-									addCardToDeck(card)
-								}
-								.onLongPressGesture {
-									deleteCard(card)  // 🔹 Long press now only deletes
-								}
-								.addCardHapticFeedback(trigger: hapticFeedbackAdd)
-						} else if let uiImage = UIImage(data: card.imageData) {
-							Image(uiImage: uiImage)
-								.resizable()
-								.aspectRatio(contentMode: .fit)
-								.frame(maxWidth: 110)
-								.onTapGesture(perform: {
-									hapticFeedbackAdd.toggle()
-									addCardToDeck(card)
-								})
-								.onAppear { imageCache[card.uniqueId] = uiImage }
-								.onLongPressGesture {
-									hapticFeedBackDelete.toggle()
-									deleteCard(card)  // 🔹 Long press now only deletes
-								}
-								.addCardHapticFeedback(trigger: hapticFeedbackAdd)
-								.deleteCardHapticFeedback(trigger: hapticFeedBackDelete)
-						}
+						let copiesOfCard = cardsInDeck.filter { $0.id == card.id }.count
+						let image = imageCache[card.uniqueId] ?? UIImage(data: card.imageData)
 						
+						if let image = image {
+							CardImageView(
+								image: image,
+								card: card,
+								isTapped: tappedCardID == card.uniqueId,
+								copiesOfCard: copiesOfCard,
+								onTap: { handleCardTap(card) },
+								onLongPress: {
+									hapticFeedBackDelete.toggle()
+									deleteCard(card)
+								},
+								hapticFeedbackTrigger: hapticFeedbackAdd
+							)
+							.onAppear {
+								if imageCache[card.uniqueId] == nil {
+									imageCache[card.uniqueId] = image
+								}
+							}
+						}
 					}
+					
 				}
-				.padding(.horizontal, 10)
+				.padding(10)
 			}
 			.scrollIndicators(.hidden)
 			.overlay {
 				MessageView(messageContent: messageManager.messageContent)
 					.opacity(messageManager.isShowingMessage ? 1 : 0)
 					.animation(.easeInOut(duration: 0.3), value: messageManager.isShowingMessage)
-					.shadow(radius: 5)
 			}
 		}
 		.overlay {
@@ -141,7 +126,31 @@ struct AddPlayableView: View {
 		}
 	}
 	
-	
+	private func handleCardTap(_ card: PlayableCard) {
+		let copiesOfCard = cardsInDeck.filter { $0.id == card.id }.count
+		
+		guard cardsInDeck.count < 65 else {
+			messageManager.messageContent = "Deck can't have more than 65 cards."
+					messageManager.showMessage()
+					return
+		}
+		
+		guard copiesOfCard < 4 else {
+			messageManager.messageContent = "You can't have more than 4 copies of a card in deck."
+					messageManager.showMessage()
+					return
+		}
+		
+		
+		
+		tappedCardID = card.uniqueId
+		DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+			tappedCardID = nil
+		}
+		
+		hapticFeedbackAdd.toggle()
+		addCardToDeck(card)
+	}
 }
 
 

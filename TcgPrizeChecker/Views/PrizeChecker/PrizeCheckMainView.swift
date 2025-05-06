@@ -37,6 +37,10 @@ struct PrizeCheckView: View {
 	
 	
 	@FocusState private var focusedFieldIndex: Int?
+	
+	@State private var showShuffleAnimation = false
+	@State private var isShuffleAnimationCompleted = false
+	
 	var body: some View {
 		NavigationStack {
 			ZStack {
@@ -47,13 +51,11 @@ struct PrizeCheckView: View {
 						.zIndex(0) // Put the overlay behind everything else
 				}
 				VStack(spacing: 5) {
-					if timerViewModel.isRunning {
-						PrizeCheckerHeaderView(
-							timerViewModel: timerViewModel,
-							rotationAngle: $rotationAngle,
-							activeModal: $activeModal,
-							hideTimer: uiState.hideTimer
-						)
+					if timerViewModel.isRunning && isShuffleAnimationCompleted {
+						TimerView(timerViewModel: timerViewModel)
+							.opacity(uiState.hideTimer ? 0 : 1)
+							.animation(.linear(duration: 0.2), value: uiState.hideTimer)
+							.frame(maxWidth: .infinity, alignment: .center)
 						.onTapGesture {
 							focusedFieldIndex = nil
 						}
@@ -115,8 +117,7 @@ struct PrizeCheckView: View {
 					ScrollView {
 						
 						//"Hoveddelen av viewet hvor de tre radene med kort er.
-						if !prizeCheckViewModel.deckState.cardsInHand.isEmpty {
-							
+						if !prizeCheckViewModel.deckState.cardsInHand.isEmpty && isShuffleAnimationCompleted {
 							DeckAndHandView(
 								deckSpacing: $deckSpacing,
 								handSpacing: $handSpacing,
@@ -130,7 +131,7 @@ struct PrizeCheckView: View {
 							.simultaneousGesture(
 								TapGesture()
 									.onEnded {
-											focusedFieldIndex = nil
+										focusedFieldIndex = nil
 										
 									}
 							)
@@ -166,22 +167,13 @@ struct PrizeCheckView: View {
 							.animation(.easeInOut(duration: 0.35), value: deckViewModel.lastRenderedDeckID)
 							.opacity(timerViewModel.isRunning ? 0 : 1)
 						}
-			
-//						if let selectedDeck = selectedDeck, selectedDeck.cards.count < 14 {
-//								Text("There isn't enough cards in the deck yet to prize check.")
-//							}
 					}
 					.scrollDisabled(prizeCheckViewModel.tappedDeck || prizeCheckViewModel.tappedHand)
 					
 					
 					//Hvis brukeren endrer deck i f.eks MainDeckView, så nullstilles dette viewet, så det ikke vises noen kort. 17.12.24
 					.onChange(of: deckSelectionViewModel.selectedDeckID) { _, newID in
-						if !prizeCheckViewModel.deckState.cardsInHand.isEmpty {
-							withAnimation {
-								prizeCheckViewModel.fullViewReset()
-							}
-							print("The Cards in the Prize Checker was removed.")
-						}
+//						resetIfNeeded(reason: "Deck was changed")
 						
 						guard let newDeck = decks.first(where: { $0.id == newID }) else { return }
 						
@@ -207,13 +199,7 @@ struct PrizeCheckView: View {
 					}
 					//Hvis bruker legger til eller sletter kort fra decket, så nullstilles også viewet. Mulig denne logikken kan slås sammen med den over?. 17.12.24
 					.onChange(of: selectedDeck?.cards.count) { oldValue, newValue in
-						if !prizeCheckViewModel.deckState.cardsInHand.isEmpty {
-							withAnimation {
-								prizeCheckViewModel.fullViewReset()
-								
-							}
-							print("The Prize Checker was reset.")
-						}
+						//resetIfNeeded(reason: "Card count changed.")
 					}
 					.onChange(of: scenePhase) { oldPhase, newPhase in
 						if newPhase != .active && timerViewModel.isRunning {
@@ -241,7 +227,7 @@ struct PrizeCheckView: View {
 									timerViewModel.isRunning = false
 									timerViewModel.string = "0.00"
 									prizeCheckViewModel.fullViewReset()
-			
+									
 								} label: {
 									Image(systemName: "x.circle")
 										.font(.title)
@@ -258,13 +244,20 @@ struct PrizeCheckView: View {
 										//Submit
 										prizeCheckViewModel.checkUserGuesses()
 										//	showPrizeCards = true
-										timerViewModel.isRunning = false
 										uiState.showResultsPopover = true
+										timerViewModel.isRunning = false
 									} else {
 										//Shuffle
+										DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+												showShuffleAnimation = false
+										}
+										showShuffleAnimation = true
+										isShuffleAnimationCompleted = false
 										prizeCheckViewModel.shuffleDeck(deck: selectedDeck)
 										prizeCheckViewModel.resetDeck()
 										timerViewModel.isRunning = true
+										
+										
 									}
 									
 								} label: {
@@ -320,17 +313,16 @@ struct PrizeCheckView: View {
 					}
 				}
 			}
-//			.simultaneousGesture(
-//				TapGesture()
-//					.onEnded {
-//						focusedFieldIndex = nil
-//					}
-//			)
-			.background {
-//				if timerViewModel.isRunning {
-//					Rectangle()
-//						.fill(GradientColors.primaryAppColor).ignoresSafeArea()
-//				}
+			.overlay {
+				if showShuffleAnimation {
+					DeckShuffleAnimationView(startAnimation: $showShuffleAnimation) {
+						isShuffleAnimationCompleted = true
+						print("Shuffle animation is done")
+					}
+						
+						//.opacity(showShuffleAnimation ? 1 : 0)
+				}
+	
 			}
 			.navigationTitle("Prize Check")
 			.navigationBarTitleDisplayMode(.inline)
@@ -341,6 +333,15 @@ struct PrizeCheckView: View {
 			}
 		}
 	}
+	
+//	private func resetIfNeeded(reason: String) {
+//		guard !prizeCheckViewModel.deckState.cardsInHand.isEmpty else { return }
+//		withAnimation {
+//			prizeCheckViewModel.fullViewReset()
+//		}
+//		
+//		print("Prize Checker was reset due to: \(reason).")
+//	}
 }
 
 #Preview {
@@ -357,26 +358,6 @@ struct PrizeCheckView: View {
 		)
 	}
 }
-
-
-//Denne knapper er for debugging og kan fjernes når app-en er ferdig. 17.12.24
-//				Button("Show prizes") {
-//					showPrizeCards.toggle()
-//				}
-//				.disabled(prizeCards.isEmpty)
-//				.buttonStyle(.borderedProminent)
-//En info knapp som trigger et sheet som enkelt forklarer hvordan prize checker-en funker.
-
-
-//		for (index, userGuess) in userGuesses.enumerated() {
-//			if userGuess.count > 2, prizeCards.contains(where: { $0.name.lowercased().contains(userGuess.lowercased())
-//			})
-//			{
-//				guessResult[index] = .correct
-//			} else {
-//				guessResult[index] = .wrong
-//			}
-//		}
 
 enum PrizeModal: Identifiable {
 	case info

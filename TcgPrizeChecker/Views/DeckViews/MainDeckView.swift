@@ -34,7 +34,6 @@ struct MainDeckView: View {
 	@State private var selectedDeck: Deck?
 	
 	@State private var showProgressView = false
-	
 	var body: some View {
 		NavigationStack {
 			VStack {
@@ -124,10 +123,11 @@ struct MainDeckView: View {
 				if !isInputActive && searchViewModel.searchText.isEmpty {
 					DeckActionsView(
 						decks: decks,
-						selectedDeck: selectedDeck,
+						selectedDeck: $selectedDeck,
 						isShowingMessage: $uiState.isShowingMessage,
 						deleteDeck: $uiState.deleteDeck,
-						activeModal: $activeModal
+						activeModal: $activeModal,
+						showProgressView: $showProgressView
 					)
 					DeckChoicesView(
 						viewSelection: $uiState.viewSelection,
@@ -232,11 +232,19 @@ struct MainDeckView: View {
 				MessageView(messageContent: "You can only have 10 decks.")
 					.opacity(uiState.isShowingMessage ? 1 : 0)
 			}
+			
 			//			To make sure the textfield doesn't lag upon user interaction whenever the app relaunches.
 			.navigationTitle("Deck Overview")
 			.navigationBarTitleDisplayMode(.inline)
 		}
+		.blur(radius: showProgressView ? 20 : 0)
 		// Playable cards er kommentert ut til appen har helt implementert muligheten til å ha flere deck
+		.overlay {
+			if showProgressView {
+						   DeleteAnimationView()
+					   }
+		}
+
 		.sheet(item: $activeModal) { modal in
 			switch modal {
 			case .playable:

@@ -39,38 +39,14 @@ struct DeckPartView: View {
 						HStack(spacing: spacing) {
 							ForEach(cards.indices, id: \.self) { index in
 								VStack {
-									if isCardsInHand {
-										// Cards shown when this view is rendered as the hand
-										if let original = UIImage(data: cards[index].imageData),
-										   let uiImage = original.downscaled(to: CGSize(width: 432, height: 576)) {
-											(flipCards ? Image(uiImage: uiImage) : Image("cardBackMedium"))
-												.resizable()
-												.scaledToFit()
-												.frame(maxWidth: 108, maxHeight: 144)
-												.scaleEffect(x: flipCards ? -1 : 1, y: 1)
-												.rotation3DEffect(.degrees(flipCards ? -180 : 0), axis: (x: 0.0, y: 1.0, z: 0.0))
-												.animation(.easeInOut(duration: 0.3).delay(Double(index) * 0.1), value: flipCards)
-												.shadow(radius: (index != 0 && index != cards.count - 1) ? 5 : 0)
-											
-										} else {
-											Text("No image avaliable.")
-										}
-									} else {
-										//Cards shown when the view is rendered as the deck.
-										if let uiImage =
-//											isViewTapped ? fullResImageCache[index] :
-												downscaledImageCache[index] {
-											Image(uiImage: uiImage)
-												.resizable()
-												.scaledToFit()
-												.frame(maxWidth: 108, maxHeight: 144)
-												.opacity(showDeck ? 1 : 0)
-												.animation(.linear(duration: 0.5), value: showDeck)
-												.shadow(radius: (index != 0 && index != cards.count - 1) ? 5 : 0)
-										} else {
-											Text("No image avaliable.")
-										}
-									}
+									PrizeCheckCardView(
+												card: cards[index],
+												index: index,
+												isCardsInHand: isCardsInHand,
+												flipCards: flipCards,
+												showDeck: showDeck,
+												downscaledImageCache: downscaledImageCache
+											)
 									
 								}
 								
@@ -96,9 +72,6 @@ struct DeckPartView: View {
 			.padding(.horizontal,5)
 			.opacity(tappedDeck ? 0 : 1)
 		}
-//		.onChange(of: isViewTapped) {
-//			loadFullResolutionImages()
-//		}
 		.onAppear {
 			flipCards = true
 			loadDownscaledImages()
@@ -138,19 +111,6 @@ struct DeckPartView: View {
 			}
 		}
 	}
-	
-//	private func loadFullResolutionImages() {
-//		   for index in cards.indices {
-//			   if fullResImageCache[index] == nil {
-//				   if let original = UIImage(data: cards[index].imageData),
-//					  let fullResImage = original.downscaled(to: CGSize(width: 324, height: 576)) {
-//					   fullResImageCache[index] = fullResImage
-//				   }
-//				   print("Full res images is now live")
-//			   }
-//		   }
-//	   }
-	   
 	
 	private func outerSpacer(forTappedState tapped: Bool) -> some View {
 		Color.clear.frame(width: tapped ? 85 : 0).opacity(0)
