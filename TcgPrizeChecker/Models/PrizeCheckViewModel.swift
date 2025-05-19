@@ -44,12 +44,7 @@ class PrizeCheckViewModel: ObservableObject {
 		for (index, userGuess) in userGuesses.enumerated() {
 			let cleanedGuess = userGuess.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
 			
-			guard !cleanedGuess.isEmpty else {
-				guessResult[index] = .wrong
-				continue
-			}
-			
-			guard cleanedGuess.count > 2 else {
+			guard !cleanedGuess.isEmpty, cleanedGuess.count > 2 else {
 				guessResult[index] = .wrong
 				continue
 			}
@@ -65,14 +60,20 @@ class PrizeCheckViewModel: ObservableObject {
 	}
 	
 	func fullViewReset() {
+//		guard !deckState.cardsInHand.isEmpty || !deckState.remainingCardsInDeck.isEmpty else {
+//				return
+//			}
+		
 		deckState.remainingCardsInDeck.removeAll()
 		deckState.cardsInHand.removeAll()
 		tappedDeck = false
 		tappedHand = false
 		isViewTapped = false
-		//prizeCards.removeAll()
-		//elapsedTime = 0.0
-		//timer.string = "0.00"
+	}
+	
+	func startNewRound(with deck: Deck?) {
+		shuffleDeck(deck: deck)
+		resetDeck()
 	}
 }
 

@@ -26,8 +26,8 @@ struct MessageView: View {
 					.background {
 						RoundedRectangle(cornerRadius: 20)
 							.fill(.thinMaterial)
-							.frame(maxWidth: gr.size.width - 100, maxHeight: 120)
 							.shadow(color: .black.opacity(0.4), radius: 8, x: 5, y: 5)
+							.frame(maxWidth: max(gr.size.width - 100, 0), maxHeight: 120)
 					}
 			
 			.position(x: gr.size.width / 2, y: gr.size.height / 1.2)

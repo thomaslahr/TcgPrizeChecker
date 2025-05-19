@@ -22,7 +22,7 @@ struct DeckActionsView: View {
 	@Binding var showProgressView: Bool
 	
 	var body: some View {
-		ZStack {
+		VStack {
 			HStack {
 				Button {
 					if decks.count > 9 {
@@ -33,36 +33,23 @@ struct DeckActionsView: View {
 				} label: {
 					Image(systemName: "plus.circle")
 						.foregroundStyle(.green)
-						.font(.title)
+						.font(.system(size: 30))
 				}
-				.frame(maxWidth: .infinity, alignment: .leading)
 				.padding(.leading, 15)
-			}
-			HStack {
-				if !decks.isEmpty {
-					HStack(spacing: 2){
-						Text("Current deck: ")
-							.fontDesign(.rounded)
-							.fontWeight(.semibold)
-						CustomPickerMenuView(decks: decks)
+				
+				Button {
+					if decks.count > 9 {
+						showMessage()
+					} else {
+						activeModal = .importDeck
 					}
-					//.frame(maxWidth: .infinity, alignment: .center)
-				} else {
-					HStack {
-						Image(systemName: "arrow.left")
-						Text("Create a deck to get started.")
-							.fontDesign(.rounded)
-							.fontWeight(.semibold)
-					}
-					.offset(x: waveBounce ? -15 : 0)
-					.animation(.easeInOut(duration: 0.5), value: waveBounce)
-					.frame(maxWidth: .infinity, alignment: .center)
-					.onAppear {
-						startWaveAnimationLoop()
-					}
+				} label: {
+					Image(systemName: "square.and.arrow.down")
+						.foregroundStyle(GradientColors.primaryAppColor)
+						.font(.system(size: 25))
 				}
-			}
-			HStack {
+				Spacer()
+				
 				if decks.count > 0 {
 					withAnimation {
 						Button {
@@ -111,6 +98,30 @@ struct DeckActionsView: View {
 			}
 			.frame(maxWidth: .infinity, alignment: .trailing)
 			.padding(.trailing, 15)
+		}
+		.overlay {
+			if !decks.isEmpty {
+				HStack(spacing: 2){
+					Text("Current deck: ")
+						.fontDesign(.rounded)
+						.fontWeight(.semibold)
+					CustomPickerMenuView(decks: decks)
+				}
+				//.frame(maxWidth: .infinity, alignment: .center)
+			} else {
+				HStack {
+					Image(systemName: "arrow.left")
+					Text("Create a deck to get started.")
+						.fontDesign(.rounded)
+						.fontWeight(.semibold)
+				}
+				.offset(x: waveBounce ? -15 : 0)
+				.animation(.easeInOut(duration: 0.5), value: waveBounce)
+				.frame(maxWidth: .infinity, alignment: .center)
+				.onAppear {
+					startWaveAnimationLoop()
+				}
+			}
 		}
 	}
 	private func showMessage() {

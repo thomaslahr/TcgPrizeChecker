@@ -17,5 +17,6 @@ class TimerViewModel: ObservableObject {
 	func stopAndReset() {
 		isRunning = false
 		elapsed = 0.0
+		string = "0.00"
 	}
 }

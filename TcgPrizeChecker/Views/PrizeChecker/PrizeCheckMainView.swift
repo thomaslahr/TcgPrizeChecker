@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct PrizeCheckView: View {
+	@Environment(\.dismiss) private var dismiss
 	@Environment(\.scenePhase) private var scenePhase
 	@EnvironmentObject var deckSelectionViewModel: DeckSelectionViewModel
 	@ObservedObject var imageCache: ImageCacheViewModel
@@ -40,6 +41,9 @@ struct PrizeCheckView: View {
 	
 	@State private var showShuffleAnimation = false
 	@State private var isShuffleAnimationCompleted = false
+	@State private var showStoppedTimerAlert = false
+	@State private var hasResetView = false
+	@State private var flipCard = false
 	
 	var body: some View {
 		NavigationStack {
@@ -171,9 +175,7 @@ struct PrizeCheckView: View {
 					.scrollDisabled(prizeCheckViewModel.tappedDeck || prizeCheckViewModel.tappedHand)
 					
 					
-					//Hvis brukeren endrer deck i f.eks MainDeckView, så nullstilles dette viewet, så det ikke vises noen kort. 17.12.24
 					.onChange(of: deckSelectionViewModel.selectedDeckID) { _, newID in
-//						resetIfNeeded(reason: "Deck was changed")
 						
 						guard let newDeck = decks.first(where: { $0.id == newID }) else { return }
 						
@@ -197,23 +199,33 @@ struct PrizeCheckView: View {
 						}
 						imageCache.revealedCardIDs.removeAll()
 					}
-					//Hvis bruker legger til eller sletter kort fra decket, så nullstilles også viewet. Mulig denne logikken kan slås sammen med den over?. 17.12.24
-					.onChange(of: selectedDeck?.cards.count) { oldValue, newValue in
-						//resetIfNeeded(reason: "Card count changed.")
-					}
 					.onChange(of: scenePhase) { oldPhase, newPhase in
 						if newPhase != .active && timerViewModel.isRunning {
 							// App is no longer active → reset everything
-							timerViewModel.stopAndReset()
-							//timer.string = "0.00"
+							
+							Task { @MainActor in
+								try? await Task.sleep(nanoseconds: 1_000_000_000)
+								showStoppedTimerAlert = true
+								timerViewModel.stopAndReset()
+								prizeCheckViewModel.fullViewReset()
+							}
+							
 							print("App moved to background or became inactive — timer stopped and reset.")
 						}
+					}
+					.alert("Prize Checking stopped", isPresented: $showStoppedTimerAlert) {
+						Button("OK", role: .cancel) {
+							dismiss()
+							showStoppedTimerAlert = false
+						}
+					} message: {
+						Text("When the app gets sent to the background the Prize Checker stops and resets.")
 					}
 					
 					.onDisappear {
 						prizeCheckViewModel.fullViewReset()
 						timerViewModel.isRunning = false
-						timerViewModel.string = "0.00"
+					//	timerViewModel.string = "0.00"
 					}
 					
 					//Knappene nederst i viewet, over TabViewet.
@@ -225,7 +237,7 @@ struct PrizeCheckView: View {
 							ZStack {
 								Button {
 									timerViewModel.isRunning = false
-									timerViewModel.string = "0.00"
+									//timerViewModel.string = "0.00"
 									prizeCheckViewModel.fullViewReset()
 									
 								} label: {
@@ -248,27 +260,21 @@ struct PrizeCheckView: View {
 										timerViewModel.isRunning = false
 									} else {
 										//Shuffle
-										DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-												showShuffleAnimation = false
+										Task { @MainActor in
+											try? await Task.sleep(nanoseconds: 1_000_000_000)
+											showShuffleAnimation = false
 										}
-										showShuffleAnimation = true
 										isShuffleAnimationCompleted = false
-										prizeCheckViewModel.shuffleDeck(deck: selectedDeck)
-										prizeCheckViewModel.resetDeck()
+										showShuffleAnimation = true
+										prizeCheckViewModel.startNewRound(with: selectedDeck)
 										timerViewModel.isRunning = true
-										
-										
 									}
-									
 								} label: {
 									Text(timerViewModel.isRunning ? "Submit" : "Shuffle Deck")
 								}
 								.buttonStyle(.borderedProminent)
 								.frame(maxWidth: .infinity, alignment: .center)
 								.disabled(selectedDeck?.cards.count ?? 0 < 14 || selectedDeck?.cards.count ?? 0 > 60)
-								
-								
-								//Submit-kanppen er deaktivert hvis shuffle har blitt trykket på først. Mulig selve logikken her kan forenkles? 17.12.24
 								
 								Button {
 									activeModal = .info
@@ -307,9 +313,6 @@ struct PrizeCheckView: View {
 							selectedDeckID: deckSelectionViewModel.selectedDeckID ?? "",
 							timerViewModel: timerViewModel)
 						.interactiveDismissDisabled()
-						.onAppear() {
-							prizeCheckViewModel.fullViewReset()
-						}
 					}
 				}
 			}
@@ -319,10 +322,7 @@ struct PrizeCheckView: View {
 						isShuffleAnimationCompleted = true
 						print("Shuffle animation is done")
 					}
-						
-						//.opacity(showShuffleAnimation ? 1 : 0)
 				}
-	
 			}
 			.navigationTitle("Prize Check")
 			.navigationBarTitleDisplayMode(.inline)
@@ -333,15 +333,6 @@ struct PrizeCheckView: View {
 			}
 		}
 	}
-	
-//	private func resetIfNeeded(reason: String) {
-//		guard !prizeCheckViewModel.deckState.cardsInHand.isEmpty else { return }
-//		withAnimation {
-//			prizeCheckViewModel.fullViewReset()
-//		}
-//		
-//		print("Prize Checker was reset due to: \(reason).")
-//	}
 }
 
 #Preview {

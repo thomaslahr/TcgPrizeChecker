@@ -13,7 +13,10 @@ struct TcgPrizeCheckerApp: App {
 	
 	//Can be removed if not deployed for iOS17 and below
 	@StateObject private var deckSelectionViewModel = DeckSelectionViewModel()
+	
 	@StateObject var messageManager = MessageManager()
+	
+	@StateObject private var networkMonitor = NetworkMonitor()
 	
     var body: some Scene {
         WindowGroup {
@@ -22,6 +25,7 @@ struct TcgPrizeCheckerApp: App {
 			//Can be removed if not deployed for iOS17 and below
 				.environmentObject(deckSelectionViewModel)
 				.environmentObject(messageManager)
+				.environmentObject(networkMonitor)
 			
         }
     }

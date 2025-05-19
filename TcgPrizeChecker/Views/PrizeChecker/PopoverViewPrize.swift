@@ -8,9 +8,6 @@
 import SwiftUI
 import SwiftData
 
-import SwiftUI
-import SwiftData
-
 struct PopoverViewPrize: View {
 	@Environment(\.dismiss) private var dismiss
 	@Environment(\.modelContext) private var modelContext
@@ -29,8 +26,9 @@ struct PopoverViewPrize: View {
 	@State private var isAnimationDone = false
 	
 	var timeSpentDescription: String {
-		let minutes = Int(timerViewModel.elapsed) / 60
-		let seconds = Int(timerViewModel.elapsed) % 60
+		let totalSeconds = Int(timerViewModel.elapsed.rounded())
+		let minutes = totalSeconds / 60
+		let seconds = totalSeconds % 60
 		
 		if minutes == 0 {
 			return "You spent \(seconds) second\(seconds == 1 ? "" : "s") prize checking."
@@ -45,13 +43,20 @@ struct PopoverViewPrize: View {
 	var body: some View {
 		
 		VStack{
-			Text(timeSpentDescription)
-				.font(.system(size: 18))
-				.fontWeight(.bold)
-				.fontDesign(.rounded)
-				.multilineTextAlignment(.center)
-				.frame(maxWidth: 300)
-				.padding()
+			VStack(spacing: 10) {
+				Text("Results")
+					.font(.system(size: 25))
+					.fontWeight(.bold)
+					.fontDesign(.rounded)
+
+				Text(timeSpentDescription)
+					.font(.system(size: 14))
+					.fontWeight(.bold)
+					.fontDesign(.rounded)
+					.multilineTextAlignment(.center)
+					.frame(maxWidth: 300)
+			}
+			.padding()
 			
 				VStack {
 						LazyVGrid(columns: columns, spacing: 10) {
@@ -94,7 +99,8 @@ struct PopoverViewPrize: View {
 			
 			HStack {
 				Button {
-					handleOK()
+					prizeCheckViewModel.fullViewReset()
+					dismiss()
 				} label: {
 					SimpleButtonView(buttonText: "OK", isButtonFilled: false)
 				}
@@ -113,23 +119,23 @@ struct PopoverViewPrize: View {
 			.padding(.top, 10)
 		}
 		.onAppear {
-			Task { @MainActor in
-				try? await Task.sleep(nanoseconds: 700_000_000)
-				withAnimation {
-					flipCard = true
-					showText = true
-					isAnimationDone = true
+			print("Flip card is: \(flipCard)")
+				Task { @MainActor in
+					try? await Task.sleep(nanoseconds: 100_000_000)
+					withAnimation {
+						print("Inside popover onAppear?")
+							flipCard = true
+					}
 				}
-			}
+		}
+		.onChange(of: flipCard) {
+			showText = true
+			isAnimationDone = true
 		}
 	}
 	
-	private func handleOK() {
-		timerViewModel.string = "0.00"
-		dismiss()
-	}
-	
 	private func handleSave() {
+		prizeCheckViewModel.fullViewReset()
 		if let selectedDeck = try? modelContext.fetch(FetchDescriptor<Deck>()).first(where: { $0.id == selectedDeckID}) {
 			
 			let newResult = PrizeCheckResult(elapsedTime: timerViewModel.elapsed, correctAnswer: correctGuesses.count)
@@ -138,9 +144,7 @@ struct PopoverViewPrize: View {
 			try? modelContext.save()
 		}
 			
-		
 		print("Result was saved to SwiftData!")
-		timerViewModel.string = "0.00"
 		dismiss()
 	}
 }

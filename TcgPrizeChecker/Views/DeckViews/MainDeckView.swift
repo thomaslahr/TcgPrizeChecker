@@ -261,6 +261,8 @@ struct MainDeckView: View {
 			case .info:
 				DeckInfoView(selectedDeck: selectedDeck)
 					.presentationDetents([.medium])
+			case .importDeck:
+				ImportDeckListMainView(activeModel: $activeModal)
 			}
 		}
 		.onAppear {
@@ -299,6 +301,7 @@ enum DeckModal: Identifiable {
 	case create
 	case settings
 	case info
+	case importDeck
 	
 	var id: Int { hashValue }
 }

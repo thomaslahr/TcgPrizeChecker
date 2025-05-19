@@ -36,15 +36,15 @@ import SwiftUI
 //		let itemCount = cache.countLimit  // CountLimit isn't always accurate, but gives an idea
 //		print("🗂️ Cache contains ~\(totalSizeMB) MB, Number of stored items: \(itemCount)")
 //	}
-//	
-//	
+//
+//
 //
 //	private func formatSize(_ bytes: Int) -> String {
 //		let mb = Double(bytes) / (1024 * 1024)
 //		return String(format: "%.2f", mb)
 //	}
-//	
-//	
+//
+//
 //}
 
 
@@ -52,48 +52,48 @@ import SwiftUI
 struct CachedImageView: View {
 	let urlString: String
 	@State private var uiImage: UIImage?
-
+	
 	var body: some View {
 		Group {
 			if let image = uiImage {
 				Image(uiImage: image)
 					.resizable()
 					.aspectRatio(contentMode: .fit)
-					//.frame(maxWidth: 60)
+				//.frame(maxWidth: 60)
 					.shadow(color: .black, radius: 3)
 			} else {
 				Image(.cardBackMedium)
 					.resizable()
 					.aspectRatio(contentMode: .fit)
-					//.frame(maxWidth: 60)
+				//.frame(maxWidth: 60)
 					.shadow(color: .black, radius: 3)					.onAppear {
 						loadImage()
 					}
 			}
 		}
 	}
-
+	
 	private func loadImage() {
 		// 1️⃣ Check if image exists in FileManager
 		if let cachedImage = PersistentImageCache.shared.getImage(forKey: urlString) {
 			uiImage = cachedImage
 			return
 		}
-
+		
 		// 2️⃣ Download from network if not cached
 		guard let url = URL(string: urlString) else {
 			print("🚨 Invalid URL: \(urlString)")
 			return
 		}
-
+		
 		print("🌍 Downloading image: \(urlString)")
-
+		
 		Task {
 			do {
 				let (data, _) = try await URLSession.shared.data(from: url)
 				if let image = decodeImageWithAlpha(from: data) {
 					PersistentImageCache.shared.saveImage(image, forKey: urlString)
-
+					
 					await MainActor.run {
 						uiImage = image
 					}
@@ -111,7 +111,7 @@ struct CachedImageView: View {
 		}
 		return UIImage(cgImage: cgImage, scale: UIScreen.main.scale, orientation: .up)
 	}
-
+	
 }
 
 

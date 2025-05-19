@@ -34,7 +34,8 @@ struct DeckListView: View {
 								.font(.system(size: 10))
 							Text(card.name)
 								.fontWeight(.bold)
-								.font(.system(size: 18))
+								.font(.system(size: 16))
+								.foregroundStyle(Color.primary)
 							
 							HStack(spacing: 3) {
 								if let category = card.category {
@@ -56,7 +57,9 @@ struct DeckListView: View {
 									.font(.system(size: 13))
 							}
 						}
+						.foregroundStyle(.secondary)
 						.fontDesign(.rounded)
+						
 						Spacer()
 						
 						if let cachedImage = imageCache.cache[card.uniqueId] {
